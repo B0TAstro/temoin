@@ -1,0 +1,52 @@
+Témoin
+Copyright (c) 2026 Tom Boullay. All rights reserved.
+
+This software, including its source code, documentation, designs, diagrams
+and assets (the "Software"), is the exclusive property of Tom Boullay
+(the "Author").
+
+The Software is made publicly visible for reading and evaluation purposes
+only. Viewing the source code on the hosting platform does not grant any
+licence or right other than those expressly stated below.
+
+1. Permitted without prior permission
+   - Viewing and reading the Software on the platform where the Author
+     publishes it.
+   - Evaluating the Software as part of an academic assessment of the
+     Author's work.
+
+2. Requires the Author's prior written permission
+   Any other use, including but not limited to:
+   - copying, cloning for redistribution, or reproducing the Software, in
+     whole or in part;
+   - modifying, adapting, translating, or creating derivative works;
+   - distributing, publishing, sublicensing, selling, or making the
+     Software available to third parties;
+   - using the Software, or any part of it, in another product, service,
+     or project, whether commercial or not;
+   - using the Software, its name, or its visual identity for any public
+     or commercial purpose.
+
+3. Requesting permission
+   Requests must be sent to the Author through the contact details on the
+   Author's profile on the platform hosting this repository. Permission is
+   only valid if granted in writing by the Author, and may be limited in
+   scope and time.
+
+4. Contributions
+   Any contribution submitted to this repository (issue, pull request,
+   suggestion) may be used, modified and integrated by the Author without
+   compensation. Submitting a contribution does not grant the contributor
+   any right over the Software.
+
+5. No warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE.
+
+6. Third-party components
+   Third-party libraries and models used by the Software (such as React
+   Native, Expo, OpenCV or Vosk) remain subject to their own licences.
+   This licence applies only to the Author's own work.
