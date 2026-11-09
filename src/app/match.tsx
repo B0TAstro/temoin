@@ -27,9 +27,11 @@ import { type ReplayClip, type ReplayOutcome, ReplayScreen } from '@/features/re
 import { PendingBanner } from '@/features/score/PendingBanner';
 import { ScoreDisplay } from '@/features/score/ScoreDisplay';
 import { Scoreboard } from '@/features/score/Scoreboard';
-import { buildJoinLink } from '@/features/session/joinLink';
+import { buildJoinLink } from '@/core/protocol/joinLink';
 import { decodeForm, toSetup } from '@/features/session/setup';
-import { type Session, useGuestSession, useHostSession } from '@/features/session/useSession';
+import type { Session } from '@/features/session/Session';
+import { useGuestSession } from '@/features/session/useGuestSession';
+import { useHostSession } from '@/features/session/useHostSession';
 import { type VoiceStatus, useVoice } from '@/features/voice/useVoice';
 import { Button } from '@/ui/Button';
 import { useOrientation } from '@/ui/orientation';

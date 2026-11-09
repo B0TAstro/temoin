@@ -11,7 +11,7 @@ import {
   useObjectOutput,
 } from 'react-native-vision-camera';
 
-import { parseJoinLink } from '@/features/session/joinLink';
+import { parseJoinLink } from '@/core/protocol/joinLink';
 import { Button } from '@/ui/Button';
 import { colors, radius } from '@/ui/theme';
 

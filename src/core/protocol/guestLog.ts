@@ -1,0 +1,17 @@
+import type { LoggedEvent } from '@/core/events/matchLog';
+
+export type Received = {
+  log: readonly LoggedEvent[];
+  /** An event was skipped: the guest asks the host for the whole log. */
+  gap: boolean;
+};
+
+/**
+ * The guest's side of the protocol: events are applied in the order of their numbers. One already
+ * applied is ignored (the host sent it twice); one too far ahead means another was lost.
+ */
+export function receiveEvent(log: readonly LoggedEvent[], event: LoggedEvent): Received {
+  if (event.seq <= log.length) return { log, gap: false };
+  if (event.seq === log.length + 1) return { log: [...log, event], gap: false };
+  return { log, gap: true };
+}

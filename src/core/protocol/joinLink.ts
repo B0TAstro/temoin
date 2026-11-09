@@ -1,4 +1,4 @@
-import { PROTOCOL_VERSION } from '@/core/protocol/messages';
+import { PROTOCOL_VERSION } from './messages';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I or O: read aloud without confusion
 

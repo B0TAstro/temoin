@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { newSessionId } from '@/features/session/joinLink';
+import { newSessionId } from '@/core/protocol/joinLink';
 import { DEFAULT_FORM, encodeForm, type SetupForm } from '@/features/session/setup';
 import { Button } from '@/ui/Button';
 import { colors, radius, touch } from '@/ui/theme';
