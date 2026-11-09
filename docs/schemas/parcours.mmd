@@ -9,16 +9,16 @@ flowchart TB
 
   E4["<b>ÉCRAN 4 · Score</b> (pendant tout le match)<br/>━━━━━━━━━━━━<br/>LÉA • 30<br/>TOM    15<br/>Set 1 · 4/3<br/><i>identique sur tous les téléphones (1 à N)</i><br/>━━━━━━━━━━━━<br/>[ VAR ]   [ Contester score ]"]
 
-  E5["<b>ÉCRAN 5 · Replay</b><br/>s'ouvre sur TOUS les téléphones de la session<br/>━━━━━━━━━━━━<br/>Chacun montre le point joué<br/>depuis son propre point de vue<br/>(après V0 : « voir un autre angle » si Wi-Fi)<br/>Ralenti · image par image · zoom<br/>V1 : rebonds marqués, bouton Analyse<br/>━━━━━━━━━━━━<br/>[ Point Léa ] [ Point Tom ]<br/>[ Point rejoué ] [ Règle de repli ]"]
+  E5["<b>ÉCRAN 5 · Replay</b><br/>s'ouvre sur TOUS les téléphones de la session<br/>━━━━━━━━━━━━<br/>Chacun montre le point joué<br/>depuis son propre point de vue<br/>(après v1.0 : « voir un autre angle » si Wi-Fi)<br/>Ralenti · image par image · zoom<br/>v0.9 : rebonds marqués, bouton Analyse<br/>━━━━━━━━━━━━<br/>[ Point Léa ] [ Point Tom ]<br/>[ Point rejoué ] [ Règle de repli ]"]
 
   E6["<b>ÉCRAN 6 · Corriger le score</b><br/>━━━━━━━━━━━━<br/>Derniers points joués<br/>Proposer le bon score<br/>L'autre camp valide"]
 
   VOIX(["🎙️ <b>Annonce du serveur</b><br/>« trente quinze »<br/>━━━━━━━━━━━━<br/>Vosk sur chaque téléphone :<br/>voix → texte → score candidat<br/>L'hôte garde une seule version<br/>et l'envoie à tous"])
-  TAP(["👆 <b>V0 : tap</b><br/>le gagnant touche sa ligne,<br/>l'autre camp valide"])
+  TAP(["👆 <b>v0.1 : tap</b><br/>le gagnant touche sa ligne,<br/>l'autre camp valide"])
 
   E7["<b>ÉCRAN 7 · Fin de match</b><br/>━━━━━━━━━━━━<br/>Score final<br/>« Les vidéos ont été supprimées »<br/>[ Terminer ]"]
 
-  VOIX -- "V0.5 : score mis à jour<br/>sur tous les écrans" --> E4
+  VOIX -- "v0.3 : score mis à jour<br/>sur tous les écrans" --> E4
   TAP -- "score mis à jour<br/>sur tous les écrans" --> E4
   E1 -- "Créer" --> E2A
   E1 -- "Rejoindre" --> E2B

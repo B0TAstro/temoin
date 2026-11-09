@@ -36,7 +36,7 @@ flowchart LR
   end
 
   A_LINK <== "① Bluetooth BLE · prioritaire<br/>score, annonces vocales reconnues,<br/>validations, VAR, heartbeat" ==> B_NAT
-  A_LINK <-. "② Wi-Fi local · secours automatique<br/>si heartbeat perdu ou instable<br/>(+ extrait vidéo d'un autre angle, après V0)" .-> B_NAT
+  A_LINK <-. "② Wi-Fi local · secours automatique<br/>si heartbeat perdu ou instable<br/>(+ extrait vidéo d'un autre angle, après v1.0)" .-> B_NAT
 
   NOTE["<b>1 téléphone</b> = hôte sans invité, même code.<br/><b>N téléphones</b> = étoile autour de l'hôte,<br/>qui numérote et diffuse les événements.<br/>🔒 Pas de vidéo dans le protocole, aucun serveur."]
   B ~~~ NOTE

@@ -18,9 +18,21 @@ Chaque version ajoute une brique au socle sans remettre en cause la précédente
 
 | Version | Ce qu'elle fait | Ce qu'elle permet de vérifier |
 |---|---|---|
-| **V0** | Le téléphone filme le point en cours et garde le point précédent. « VAR » affiche le point entier au ralenti, image par image, avec zoom. Le score est suivi par un tap des joueurs | Que voir la même image suffit à deux joueurs pour régler un litige, et que le score partagé est tenu |
-| **V0.5** | Le score est suivi à la voix : l'app reconnaît l'annonce du serveur, met le score à jour et coupe le clip du point sans que les joueurs touchent le téléphone | Que le téléphone peut se faire oublier pendant l'échange |
-| **V1** | La détection suit la balle dans le replay, surligne la ligne et le rebond, recadre sur le moment de la faute et donne dedans/dehors avec un indice de confiance, sans imposer de verdict | Que la détection aide réellement à lire l'image et renforce la confiance des joueurs |
+| **v0.0** · Socle | L'app se lance sur iPhone et Android avec un simple titre « Témoin ». Architecture `src/` en place, Jest, typecheck, lint, règle d'import qui protège `core` | Que le build et l'outillage tiennent sur les deux OS |
+| **v0.0.1** · CI | Intégration continue sur chaque PR : format, lint, typecheck, tests, qualité (sécurité des dépendances, revue, taille du build). Un label sur une PR génère un build installable pour tester la PR avant de la fusionner sur `main` | Qu'aucune régression n'arrive sur `main` et qu'une PR se teste sur un vrai téléphone |
+| **v0.1** · Replay seul | Un téléphone filme point par point et garde le point en cours et le précédent. « VAR » affiche le point au ralenti, image par image, avec zoom. Score au tap, validé sur le même écran | Que voir la même image suffit à deux joueurs pour régler un litige |
+| **v0.2** · Session à plusieurs | Hôte et invités en Bluetooth (BLE), QR code pour rejoindre à tout moment, score partagé, VAR ouvert sur tous les téléphones | Que le score partagé tient, iPhone et Android ensemble |
+| **v0.3** · Voix | L'app reconnaît l'annonce du serveur (Vosk), met le score à jour et coupe le clip sans que personne ne touche le téléphone. Vidéo sans son : Vosk a le micro pour lui seul | Que le téléphone peut se faire oublier pendant l'échange |
+| **v0.4** · Son | Le son est enregistré avec la vidéo pendant que Vosk écoute. Les pics sonores (frappe, rebond) sont marqués sur la timeline du replay | Que le son aide à lire le replay et peut confirmer un rebond |
+| **v0.5** · Wi-Fi de secours | Bascule automatique BLE ↔ Wi-Fi local quand le lien est instable, retour au BLE ensuite, état du lien toujours visible | Qu'aucun événement n'est perdu quand le Bluetooth lâche |
+| **v0.6** · Court calibré | Le joueur touche les 4 coins, homographie vers le court réel, lignes projetées dans le replay | Que la géométrie tient sur un vrai court |
+| **v0.7** · Court détecté | Détection automatique des lignes du court et du filet, les 4 coins restent en secours | Que la calibration manuelle devient inutile |
+| **v0.8** · Balle suivie | Suivi de la balle dans le replay (seuil de couleur + filtre de Kalman), trajectoire affichée | Que la balle se suit sans modèle de vision |
+| **v0.9** · Rebond et confiance | Rebond (trajectoire + pic sonore), recadrage sur le moment contesté, dedans/dehors avec un indice de confiance, jamais un verdict | Que la détection aide réellement à lire l'image et renforce la confiance des joueurs |
+| **v1.0** · Match complet | Test terrain d'une heure, chauffe et batterie maîtrisées, finitions | Que l'app tient un vrai match |
+| Plus tard | Voir l'angle d'un autre téléphone (Wi-Fi), reprise du rôle d'hôte, interface du double | |
+
+Les tests qui lèvent un risque technique passent au début de la version qui en dépend : enregistreur Android et image par image (v0.1), BLE iPhone ↔ Android (v0.2), micro partagé caméra + Vosk (v0.4), lecture des images d'un clip avec OpenCV (v0.6).
 
 ## Stack
 
@@ -28,7 +40,7 @@ iOS **et** Android, et une session doit fonctionner avec un iPhone et un Android
 
 | Rôle | Choix |
 |---|---|
-| Framework | Expo (SDK 58) en development build, React Native 0.88, TypeScript strict |
+| Framework | Expo (SDK 58) en development build, React Native 0.88, TypeScript strict (+ `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`) |
 | Navigation | expo-router |
 | Caméra | react-native-vision-camera 5 (enregistreur persistant), `.mp4` sur les deux OS |
 | Lecture vidéo | react-native-video |
@@ -36,7 +48,8 @@ iOS **et** Android, et une session doit fonctionner avec un iPhone et un Android
 | Voix | react-native-vosk + `vosk-model-small-fr-0.22`, grammaire contrainte |
 | Liaison | Bluetooth Low Energy en priorité (lib candidate : `munim-bluetooth`), Wi-Fi local en secours |
 | Vision | `react-native-fast-opencv` pour les pixels, maths en TypeScript |
-| Tests | Jest |
+| Tests | Jest (jest-expo) |
+| CI | GitHub Actions |
 
 Les libs marquées « candidate » ou non encore testées sur Android doivent être validées sur un vrai téléphone avant d'être considérées comme acquises.
 
@@ -70,9 +83,9 @@ Un téléphone seul est une session normale : **un hôte sans invité**. Il n'y 
 - **Topologie en étoile** : un **hôte** (celui qui crée la session) et **0 à N invités**. L'hôte ordonne les événements, les invités ne parlent qu'à lui. Pas de maillage entre invités : plus simple, et un ordre unique des événements.
 - **Chaque téléphone** a un `deviceId`, un rôle (hôte / invité), un point de vue (`north`, `south`, `side`…) et des capacités (caméra, micro). Un téléphone peut servir juste de tableau de score.
 - **Un téléphone est lié à un point de vue sur le court, pas à un joueur** : les joueurs changent de côté, la machine à états sait qui est où.
-- **Validation par les deux camps** = des personnes, pas des téléphones. Avec un seul téléphone, les deux joueurs valident sur le même écran (ou par accord tacite en V0.5).
+- **Validation par les deux camps** = des personnes, pas des téléphones. Avec un seul téléphone, les deux joueurs valident sur le même écran (ou par accord tacite avec la voix, v0.3).
 - **Rejoindre en cours de match** : à tout moment, en scannant le QR code de l'hôte. L'invité reçoit le journal complet (quelques Ko) et commence à filmer.
-- **Départ de l'hôte** (batterie, appli fermée) : tous les téléphones ont le journal, un invité peut reprendre le rôle d'hôte (le plus ancien dans la session). À faire après V0.
+- **Départ de l'hôte** (batterie, appli fermée) : tous les téléphones ont le journal, un invité peut reprendre le rôle d'hôte (le plus ancien dans la session). À faire après v1.0.
 
 ### Protocole de partage : un journal ordonné par l'hôte
 
@@ -99,18 +112,19 @@ Coût : un événement fait quelques centaines d'octets, la diffusion est propor
 
 On garde le buffer vidéo du POC replay, mais **son unité est le point, pas la durée**. Le buffer fixe de 30 s perdait l'image quand un point était contesté tard.
 - La caméra enregistre en continu dans de petits fichiers.
-- Un **clip** = les fichiers entre deux fins de point (fin de point = score validé par tap, ou annonce vocale reconnue).
+- Un **clip** = les fichiers entre deux fins de point. La fin de point est la **proposition** du point (tap ou annonce vocale reconnue), au plus près de la vraie fin de l'échange. Si la proposition est refusée, la coupe est annulée et le clip fusionne avec le suivant.
 - On garde le point en cours et le point précédent. Dès qu'un point sort de cette fenêtre, ses fichiers sont supprimés (sauf s'ils servent encore à un clip gardé).
-- VAR verrouille les clips concernés le temps du litige. L'enregistrement continue derrière.
+- VAR verrouille les clips concernés le temps du litige. L'enregistrement est **mis en pause** pendant le replay pour soulager le téléphone (chauffe, batterie), et reprend au retour au score.
 - Tout est supprimé en fin de match et au lancement de l'app (en cas de crash).
 
 ## Score
 
-- Machine à états reprise du POC voix : points, égalité, avantage, point décisif, jeux, sets, tie-break, super tie-break, fin de match, rotation des serveurs, changements de côté.
+- Machine à états reprise du **POC voix** (`temoin-poc-voice-score/src/core/score`), qui sert de référence ; celle du POC replay est abandonnée. Le score se recalcule en rejouant le journal.
+- Elle couvre : points, égalité, avantage, point décisif, jeux, sets, tie-break, super tie-break, fin de match, rotation des serveurs, changements de côté.
 - Pensée **par équipe** dès le départ (1 joueur en simple, 2 en double).
-- Validation : un joueur de chaque équipe. En V0.5, l'annonce du serveur vaut proposition et le silence du receveur vaut accord. « Contester score » reste toujours disponible.
+- Validation : un joueur de chaque équipe. Avec la voix (v0.3), l'annonce du serveur vaut proposition et le silence du receveur vaut accord. « Contester score » reste toujours disponible.
 
-## Voix (V0.5)
+## Voix (v0.3)
 
 Chaîne : le serveur annonce le score, **Vosk transforme la voix en texte** sur le téléphone (speech to text, hors connexion), le texte est comparé aux deux scores possibles, et le score candidat retenu met l'app à jour.
 
@@ -127,10 +141,10 @@ Avec un seul téléphone, c'est le même chemin avec un seul candidat. Avec plus
 - Le bouton VAR peut être pressé sur **n'importe quel** téléphone. L'action part à l'hôte, qui l'envoie à tous.
 - **Tous** les téléphones ouvrent le replay du **même point** (même numéro, issu du journal), chacun avec **son propre clip**, donc son propre angle.
 - Avec un seul téléphone, c'est simplement le replay local.
-- **Voir l'angle d'un autre téléphone** (proposition, après V0) : on ne transfère pas le clip entier (plusieurs dizaines de Mo) mais un **extrait court** autour du moment contesté, demandé à la volée, et **seulement si le Wi-Fi local est disponible** (le BLE est trop lent pour de la vidéo). L'extrait est supprimé à la fin du litige.
+- **Voir l'angle d'un autre téléphone** (proposition, après v1.0) : on ne transfère pas le clip entier (plusieurs dizaines de Mo) mais un **extrait court** autour du moment contesté, demandé à la volée, et **seulement si le Wi-Fi local est disponible** (le BLE est trop lent pour de la vidéo). L'extrait est supprimé à la fin du litige.
 - La décision (point pour un camp, point rejoué, règle de repli) est proposée sur un téléphone, validée par l'autre camp, puis diffusée : tous les écrans reviennent au score mis à jour.
 
-## Lecture assistée (V1)
+## Lecture assistée (v0.6 à v0.9)
 
 Tourne **uniquement sur le point demandé**, jamais en continu.
 
@@ -160,6 +174,13 @@ npm test
 npm run typecheck
 npm run lint
 ```
+
+## Intégration continue (v0.0.1)
+
+GitHub Actions, sur chaque PR vers `main` :
+- **Format** (Prettier), **lint** (ESLint), **typecheck**, **tests** (Jest).
+- **Qualité** : audit de sécurité des dépendances, analyse statique du code, revue automatique de la PR, taille du bundle JS et du build signalée sur la PR.
+- **Build de PR** : un label posé sur la PR génère un build installable sur téléphone, pour tester la PR avant de la fusionner. Android : APK téléchargeable. iOS : demande un compte Apple Developer pour signer, à vérifier.
 
 ## Conventions
 

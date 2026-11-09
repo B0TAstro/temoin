@@ -72,13 +72,13 @@ Paysage, **fond noir**, uniquement le score et deux boutons.
 - Points en très grand (≥ 40 % de la hauteur), jeux et sets en haut à droite, pastille jaune devant le serveur.
 - **VAR** (jaune balle) : litige sur une balle, ouvre le replay sur les deux téléphones.
 - **Contester score** (contour blanc) : le score affiché est faux, ouvre la correction.
-- V0 : le gagnant du point touche sa ligne de score (+1), l'autre téléphone affiche « Point pour Léa ? Valider ». V0.5 : le score change seul à l'annonce du serveur, avec un bip.
+- v0.1 : le gagnant du point touche sa ligne de score (+1), l'autre téléphone affiche « Point pour Léa ? Valider ». v0.3 : le score change seul à l'annonce du serveur, avec un bip.
 - Après 10 s sans interaction, la luminosité baisse. Un tap la rétablit.
 
 ### 5.6 Écran 5 · Replay (litige sur une balle)
 S'ouvre **sur tous les téléphones de la session en même temps**, quel que soit celui où l'on a appuyé sur VAR. Chacun montre le même point depuis sa propre caméra. Avec un seul téléphone, c'est le replay local.
 
-À challenger en test : après V0, un sélecteur d'angle (« Ce téléphone · Côté nord · Côté sud ») permettrait de voir sur un seul écran un extrait court filmé par un autre téléphone, transféré en Wi-Fi local uniquement. Doit ressembler à un ralenti de télévision.
+À challenger en test : après v1.0, un sélecteur d'angle (« Ce téléphone · Côté nord · Côté sud ») permettrait de voir sur un seul écran un extrait court filmé par un autre téléphone, transféré en Wi-Fi local uniquement. Doit ressembler à un ralenti de télévision.
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
@@ -96,11 +96,11 @@ S'ouvre **sur tous les téléphones de la session en même temps**, quel que soi
 - Vidéo bord à bord, commandes sur une barre noire semi-opaque.
 - Ouvre au ralenti x0.5 sur la dernière seconde du point.
 - Pincer pour zoomer, glisser pour se déplacer, double-tap pour revenir.
-- Timeline épaisse (doigt), rebonds détectés en losanges jaunes (V1).
+- Timeline épaisse (doigt), rebonds détectés en losanges jaunes (v0.9).
 - Sélecteur de point (point en cours, précédent).
 - Quatre issues explicites, toujours visibles : point pour un camp, point pour l'autre, point rejoué, **appliquer la règle de repli** (le libellé rappelle la règle choisie). Le choix est envoyé à l'autre téléphone, qui doit confirmer.
 
-### 5.7 Analyse (V1, dans le replay)
+### 5.7 Analyse (v0.6 à v0.9, dans le replay)
 Déclenchée par un tap sur un losange de rebond, puis **Analyser**.
 - Utilise les lignes détectées à l'écran 3. Si elles manquent : image figée, « Touchez les 4 coins du court », loupe sous le doigt.
 - Résultat en surimpression : lignes du court projetées en blanc, point de rebond en jaune, cercle d'incertitude autour.

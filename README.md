@@ -36,10 +36,19 @@ Each version adds a building block without breaking the previous one. Each versi
 
 | Version | What it does | What it validates | Status |
 |---|---|---|---|
-| **V0** | Point-by-point recording, VAR button, replay in slow motion and frame by frame with zoom, score updated by tap and shared across phones (Bluetooth, Wi-Fi fallback) | Seeing the same picture is enough for two players to settle a dispute, and the shared score holds | In progress |
-| **V0.5** | Voice scoring: the app recognises the server's call, updates the score and cuts the point's clip, with no one touching the phone | The phone can disappear during the rally | Planned |
-| **V1** | Assisted reading: ball tracking in the replay, court lines and bounce highlighted, in or out with a confidence score ("70% sure the ball was out"), never imposed | Detection actually helps read the picture and builds trust | Planned |
-| **Later** | View another phone's angle on one screen, host handover, doubles UI polish, thermal management | | Ideas |
+| **v0.0** · Foundation | The app launches on iPhone and Android, architecture and tooling in place | Build and tooling work on both platforms | In progress |
+| **v0.0.1** · CI | Format, lint, typecheck, tests and quality checks on every pull request, installable build on demand to test a pull request on a phone | Nothing regresses on `main` | Planned |
+| **v0.1** · Solo replay | One phone records point by point, VAR replay in slow motion and frame by frame with zoom, score by tap | Seeing the same picture is enough to settle a dispute | Planned |
+| **v0.2** · Multi-phone session | Host and guests over Bluetooth, join by QR code, shared score, VAR opens on every phone | The shared score holds, iPhone and Android together | Planned |
+| **v0.3** · Voice | The app recognises the server's call, updates the score and cuts the clip, with no one touching the phone | The phone can disappear during the rally | Planned |
+| **v0.4** · Sound | Sound recorded with the video, hits and bounces marked on the replay timeline | Sound helps read the replay | Planned |
+| **v0.5** · Wi-Fi fallback | Automatic switch between Bluetooth and local Wi-Fi | No event is lost when Bluetooth drops | Planned |
+| **v0.6** · Calibrated court | Tap the 4 corners, court lines projected on the replay | The geometry holds on a real court | Planned |
+| **v0.7** · Detected court | Automatic court line and net detection | Manual calibration is no longer needed | Planned |
+| **v0.8** · Ball tracking | Ball followed in the replay, trajectory drawn | The ball can be tracked without a vision model | Planned |
+| **v0.9** · Bounce and confidence | Bounce detected, in or out with a confidence score ("70% sure the ball was out"), never imposed | Detection actually helps read the picture and builds trust | Planned |
+| **v1.0** · Full match | One-hour field test, heat and battery under control | The app holds a real match | Planned |
+| **Later** | View another phone's angle on one screen, host handover, doubles UI polish | | Ideas |
 
 ## Tech stack
 
