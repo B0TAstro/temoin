@@ -55,7 +55,7 @@ Les libs marquées « candidate » ou non encore testées sur Android doivent ê
 
 ## Architecture
 
-Schémas (Mermaid, affichés par GitHub) : `docs/architecture.md`, `docs/parcours.md` et `docs/synchro.md` (voix et VAR entre téléphones). Les PNG pour les slides sont dans `docs/images/`, regénérés par `npm run docs:images` : on modifie le `.md`, jamais l'image.
+Schémas (Mermaid, affichés par GitHub) : `docs/architecture.md`, `docs/parcours.md` et `docs/synchro.md` (voix et VAR entre téléphones). Les PNG pour les slides sont dans `docs/images/`, regénérés par `npm run docs:images` (ou `npm run docs:images -- architecture` pour un seul) : on modifie le `.md`, jamais l'image.
 
 ```
 models/         modèle Vosk (téléchargé par `npm run setup:model`, jamais commité)
