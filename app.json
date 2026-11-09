@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Témoin",
+    "slug": "temoin",
+    "version": "0.0.0",
+    "orientation": "default",
+    "icon": "./assets/images/icon.png",
+    "scheme": "temoin",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#111111",
+    "ios": {
+      "bundleIdentifier": "com.tomboullay.temoin",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.tomboullay.temoin",
+      "adaptiveIcon": {
+        "backgroundColor": "#111111",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#111111",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 76
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
