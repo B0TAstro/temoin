@@ -1,0 +1,42 @@
+name: 📲 PR build
+
+# Add the "build" label to a pull request to get an installable Android APK of it.
+on:
+  pull_request:
+    types: [labeled, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-build-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: 🤖 Android APK
+    if: contains(github.event.pull_request.labels.*.name, 'build')
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v7
+
+      - name: 🏗️ Build
+        id: build
+        uses: ./.github/actions/build-android
+
+      - name: 📤 Upload APK
+        id: upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: temoin-pr-${{ github.event.pull_request.number }}
+          path: ${{ steps.build.outputs.apk-path }}
+          retention-days: 14
+
+      - name: 💬 Comment the download link
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --edit-last --create-if-none --body \
+            "📲 Android APK for \`${GITHUB_SHA::7}\`: [download](${{ steps.upload.outputs.artifact-url }}) (unzip, then open the APK on the phone)."

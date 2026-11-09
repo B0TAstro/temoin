@@ -175,14 +175,20 @@ npx expo run:android --device
 npm test
 npm run typecheck
 npm run lint
+npm run format:check
+
+# Release : passer "version" de app.json et package.json à X.Y.Z, commiter, puis
+git tag vX.Y.Z && git push origin vX.Y.Z      # Android : APK publié par la CI
+npx expo run:ios --device --configuration Release   # iOS : build autonome sur l'iPhone branché
 ```
 
 ## Intégration continue (v0.0.1)
 
-GitHub Actions, sur chaque PR vers `main` :
-- **Format** (Prettier), **lint** (ESLint), **typecheck**, **tests** (Jest).
-- **Qualité** : audit de sécurité des dépendances, analyse statique du code, revue automatique de la PR, taille du bundle JS et du build signalée sur la PR.
-- **Build de PR** : un label posé sur la PR génère un build installable sur téléphone, pour tester la PR avant de la fusionner. Android : APK téléchargeable. iOS : demande un compte Apple Developer pour signer, à vérifier.
+GitHub Actions, dans `.github/` :
+- **`ci.yml`** (push sur `main` et PR) : format, lint, typecheck, tests, `expo-doctor` ; audit des dépendances livrées (bloque à partir de « high ») et revue des nouvelles dépendances sur les PR ; taille du bundle JS iOS et Android dans le résumé du job.
+- **`pr-build.yml`** : le label `build` sur une PR génère un **APK Android** installable, lien posté en commentaire.
+- **`release.yml`** : un tag `vX.Y.Z` (égal à la version de `app.json`) publie une release GitHub avec l'APK. Lançable aussi à la main sur un tag existant.
+- **iOS** n'est pas construit en CI : un build installable demande un compte Apple Developer payant. La release iOS se fait en local (voir Commandes).
 
 ## Conventions
 
