@@ -20,10 +20,8 @@ export default function Home() {
         <Button label="Créer une session" onPress={() => router.push('/create')} />
         <Button
           label="Rejoindre une session"
-          detail="Bientôt : scanner le QR code de l’hôte"
           variant="outline"
-          disabled
-          onPress={() => {}}
+          onPress={() => router.push('/join')}
         />
       </View>
 

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { newSessionId } from '@/features/session/joinLink';
 import { DEFAULT_FORM, encodeForm, type SetupForm } from '@/features/session/setup';
 import { Button } from '@/ui/Button';
 import { colors, radius, touch } from '@/ui/theme';
@@ -69,7 +70,12 @@ export default function Create() {
       <View style={styles.footer}>
         <Button
           label="Créer"
-          onPress={() => router.replace({ pathname: '/match', params: { form: encodeForm(form) } })}
+          onPress={() =>
+            router.replace({
+              pathname: '/match',
+              params: { role: 'host', s: newSessionId(), form: encodeForm(form) },
+            })
+          }
         />
       </View>
     </SafeAreaView>

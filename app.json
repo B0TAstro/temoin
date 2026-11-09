@@ -37,7 +37,16 @@
         }
       ],
       "react-native-video",
-      "expo-font"
+      "expo-font",
+      [
+        "munim-bluetooth",
+        {
+          "bluetoothBackground": false,
+          "androidBluetoothPermissions": ["scan", "connect", "advertise"],
+          "bluetoothAlwaysUsageDescription": "Témoin relie les téléphones de la session en Bluetooth pour partager le score. Aucune vidéo n'est envoyée.",
+          "multipeerServiceTypes": false
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true

@@ -94,8 +94,8 @@ Le même protocole sert quel que soit le nombre de téléphones et le transport 
 1. **Intention** : un téléphone qui veut changer l'état (point, voix, VAR, décision, correction) envoie une intention à l'hôte avec une **clé d'idempotence** (par exemple `point:23` pour une annonce vocale). L'hôte lui-même passe par le même chemin, en local.
 2. **Validation** : l'hôte applique la machine à états. Une intention invalide ou déjà traitée (même clé) est ignorée.
 3. **Événement** : l'hôte l'ajoute au journal avec un **numéro de séquence** et le diffuse à tous.
-4. **Application** : chaque téléphone applique les événements dans l'ordre des numéros. S'il en manque un, il redemande à partir du dernier reçu.
-5. **Heartbeat** : chaque invité donne signe de vie, l'hôte affiche qui est connecté.
+4. **Application** : chaque téléphone applique les événements dans l'ordre des numéros. S'il en manque un, il redemande le journal complet (quelques Ko) : plus simple qu'un rattrapage partiel, et c'est le même message qu'à la connexion.
+5. **Présence** : en v0.2, l'état du lien vient des événements de connexion Bluetooth (abonnement, déconnexion). Le heartbeat arrive avec la bascule Wi-Fi (v0.6), qui en a besoin pour juger un lien instable.
 
 Coût : un événement fait quelques centaines d'octets, la diffusion est proportionnelle au nombre d'invités. On n'échange **jamais de vidéo** dans ce protocole.
 
