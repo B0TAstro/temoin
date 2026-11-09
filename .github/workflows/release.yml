@@ -1,44 +1,105 @@
 name: 🚀 Release
 
-# Push a tag such as v0.1.0 (it must match the version in app.json), or run it by hand on an existing tag.
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
   workflow_dispatch:
-    inputs:
-      tag:
-        description: Existing tag to release (e.g. v0.0.0)
-        required: true
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  android:
-    name: 🤖 Android release
+  check-version:
+    name: 🔎 Check version
     runs-on: ubuntu-latest
-    env:
-      TAG: ${{ inputs.tag || github.ref_name }}
+    timeout-minutes: 5
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      version: ${{ steps.check.outputs.version }}
+      prerelease: ${{ steps.check.outputs.prerelease }}
     steps:
       - name: ⬇️ Checkout
         uses: actions/checkout@v7
         with:
-          ref: ${{ env.TAG }}
+          fetch-depth: 0 # every tag, to know whether this version already shipped
 
-      - name: 🔖 Check the tag matches app.json
+      - name: 🔎 Read the version and look for its tag
+        id: check
         run: |
-          version="v$(node -p "require('./app.json').expo.version")"
-          test "$TAG" = "$version" || (echo "Tag $TAG does not match app.json version $version" && exit 1)
+          version=$(node -p "require('./package.json').version")
+          app_version=$(node -p "require('./app.json').expo.version")
+          if [ "$version" != "$app_version" ]; then
+            echo "::error::package.json ($version) and app.json ($app_version) must have the same version"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          # 1.0.0-beta.1 and the like ship as pre-releases.
+          if [[ "$version" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "v$version already released: nothing to do."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "New version v$version: building the release."
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  android:
+    name: 🤖 Android APK
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v7
 
       - name: 🏗️ Build
         id: build
         uses: ./.github/actions/build-android
 
-      - name: 🚀 Publish the GitHub release
+      - name: ⬆️ Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: apk
+          path: ${{ steps.build.outputs.apk-path }}
+          if-no-files-found: error
+
+  publish:
+    name: 🚀 Publish the release
+    needs: [check-version, android]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # creates the tag and the release
+    steps:
+      - name: ⬇️ Download the APK
+        uses: actions/download-artifact@v8
+        with:
+          name: apk
+
+      - name: 🚀 Create the tag and the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check-version.outputs.version }}
+          PRERELEASE: ${{ needs.check-version.outputs.prerelease }}
         run: |
-          cp "${{ steps.build.outputs.apk-path }}" "temoin-$TAG.apk"
-          gh release create "$TAG" "temoin-$TAG.apk" --title "Témoin $TAG" --generate-notes --verify-tag \
-            || gh release upload "$TAG" "temoin-$TAG.apk" --clobber
+          mv app-release.apk "temoin-v$VERSION.apk"
+          flags=()
+          if [ "$PRERELEASE" = true ]; then flags+=(--prerelease); fi
+          gh release create "v$VERSION" "temoin-v$VERSION.apk" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Témoin v$VERSION" \
+            --generate-notes \
+            "${flags[@]}"

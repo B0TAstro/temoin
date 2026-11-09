@@ -1,6 +1,5 @@
 name: 📲 PR build
 
-# Add the "build" label to a pull request to get an installable Android APK of it.
 on:
   pull_request:
     types: [labeled, synchronize]
@@ -16,8 +15,11 @@ concurrency:
 jobs:
   android:
     name: 🤖 Android APK
-    if: contains(github.event.pull_request.labels.*.name, 'build')
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'build') &&
+      (github.event.action == 'synchronize' || github.event.label.name == 'build')
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: ⬇️ Checkout
         uses: actions/checkout@v7

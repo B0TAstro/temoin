@@ -216,8 +216,8 @@ npm run typecheck
 npm run lint
 npm run format:check
 
-# Release : passer "version" de app.json et package.json à X.Y.Z, commiter, puis
-git tag vX.Y.Z && git push origin vX.Y.Z      # Android : APK publié par la CI
+# Release : passer "version" de app.json et package.json à X.Y.Z, merger sur main.
+# Android : la CI voit une version sans tag, construit l'APK, crée le tag et la release.
 npx expo run:ios --device --configuration Release   # iOS : build autonome sur l'iPhone branché
 ```
 
@@ -226,7 +226,8 @@ npx expo run:ios --device --configuration Release   # iOS : build autonome sur l
 GitHub Actions, dans `.github/` :
 - **`ci.yml`** (push sur `main` et PR) : format, lint, typecheck, tests, `expo-doctor` ; audit des dépendances livrées (bloque à partir de « high ») et revue des nouvelles dépendances sur les PR ; taille du bundle JS iOS et Android dans le résumé du job.
 - **`pr-build.yml`** : le label `build` sur une PR génère un **APK Android** installable, lien posté en commentaire.
-- **`release.yml`** : un tag `vX.Y.Z` (égal à la version de `app.json`) publie une release GitHub avec l'APK. Lançable aussi à la main sur un tag existant.
+- **`release.yml`** (push sur `main`) : si la version de `package.json` (égale à celle de `app.json`, sinon échec) n'a pas encore de tag, construit l'APK puis crée le tag `vX.Y.Z` et la release GitHub. Une version déjà taguée ne fait rien. Une version `X.Y.Z-quelquechose` sort en pré-release. Relançable à la main (après un build raté, par exemple).
+- **Actions partagées** (`.github/actions/`) : `setup` (Node + `npm ci`) et `build-android` (APK, modèle Vosk en cache).
 - **iOS** n'est pas construit en CI : un build installable demande un compte Apple Developer payant. La release iOS se fait en local (voir Commandes).
 
 ## Conventions
