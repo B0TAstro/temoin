@@ -111,9 +111,11 @@ Coût : un événement fait quelques centaines d'octets, la diffusion est propor
 ## Enregistrement : le buffer se compte en points
 
 On garde le buffer vidéo du POC replay, mais **son unité est le point, pas la durée**. Le buffer fixe de 30 s perdait l'image quand un point était contesté tard.
-- La caméra enregistre en continu dans de petits fichiers.
-- Un **clip** = les fichiers entre deux fins de point. La fin de point est la **proposition** du point (tap ou annonce vocale reconnue), au plus près de la vraie fin de l'échange. Si la proposition est refusée, la coupe est annulée et le clip fusionne avec le suivant.
-- On garde le point en cours et le point précédent. Dès qu'un point sort de cette fenêtre, ses fichiers sont supprimés (sauf s'ils servent encore à un clip gardé).
+- **Un point = un fichier vidéo = un replay.** La caméra enregistre en continu et le fichier n'est coupé qu'à la fin du point. Pourquoi pas de petits fichiers : sur Android, CameraX n'accepte qu'un enregistrement actif à la fois, donc chaque coupe laisse un petit trou ; avec un fichier par point, ce trou tombe entre deux points, jamais pendant l'échange. Le replay lit aussi un seul fichier, sans recollage.
+- Coupe : sur iOS le fichier suivant démarre avant que le précédent s'arrête (aucune image perdue) ; sur Android le précédent s'arrête d'abord (trou mesuré, entre deux points).
+- La fin de point est la **proposition** du point (tap ou annonce vocale reconnue), au plus près de la vraie fin de l'échange. Si la proposition est refusée, le fichier déjà coupé est rattaché au point qui continue : ce point a exceptionnellement deux fichiers, joués l'un après l'autre.
+- Garde-fou : si aucun point n'est marqué pendant 5 min (oubli, changement de côté), un nouveau fichier démarre.
+- On garde **3 points** : le point en cours et les 2 précédents. Dès qu'un point sort de cette fenêtre, son fichier est supprimé.
 - VAR verrouille les clips concernés le temps du litige. L'enregistrement est **mis en pause** pendant le replay pour soulager le téléphone (chauffe, batterie), et reprend au retour au score.
 - Tout est supprimé en fin de match et au lancement de l'app (en cas de crash).
 

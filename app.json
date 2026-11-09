@@ -10,7 +10,10 @@
     "backgroundColor": "#111111",
     "ios": {
       "bundleIdentifier": "com.tomboullay.temoin",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Témoin filme le court point par point pour revoir un point contesté. La vidéo reste sur ce téléphone et est supprimée en fin de match."
+      }
     },
     "android": {
       "package": "com.tomboullay.temoin",
@@ -20,7 +23,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["android.permission.CAMERA"]
     },
     "plugins": [
       "expo-router",
@@ -34,7 +38,6 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": true,
       "reactCompiler": true
     }
   }
