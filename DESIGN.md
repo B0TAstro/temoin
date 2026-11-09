@@ -102,7 +102,7 @@ S'ouvre **sur tous les téléphones de la session en même temps**, quel que soi
 - **← Retour au score** ferme le replay sans rien changer : l'app ne gère pas un désaccord qui persiste.
 - v0.9 : une suggestion chiffrée peut s'afficher (« 80 % sûr que la balle est sortie »), jamais un avis tranché, et aucun bouton ne l'applique d'office.
 
-### 5.7 Analyse (v0.6 à v0.9, dans le replay)
+### 5.7 Analyse (v0.5, v0.7 à v0.9, dans le replay)
 Déclenchée par un tap sur un losange de rebond, puis **Analyser**.
 - Utilise les lignes détectées à l'écran 3. Si elles manquent : image figée, « Touchez les 4 coins du court », loupe sous le doigt.
 - Résultat en surimpression : lignes du court projetées en blanc, point de rebond en jaune, cercle d'incertitude autour.

@@ -24,15 +24,15 @@ Chaque version ajoute une brique au socle sans remettre en cause la précédente
 | **v0.2** · Session à plusieurs | Hôte et invités en Bluetooth (BLE), QR code pour rejoindre à tout moment, score partagé, VAR ouvert sur tous les téléphones | Que le score partagé tient, iPhone et Android ensemble |
 | **v0.3** · Voix | L'app reconnaît l'annonce du serveur (Vosk), met le score à jour et coupe le clip sans que personne ne touche le téléphone. Vidéo sans son : Vosk a le micro pour lui seul | Que le téléphone peut se faire oublier pendant l'échange |
 | **v0.4** · Son | Le son est enregistré avec la vidéo pendant que Vosk écoute. Les pics sonores (frappe, rebond) sont marqués sur la timeline du replay | Que le son aide à lire le replay et peut confirmer un rebond |
-| **v0.5** · Wi-Fi de secours | Bascule automatique BLE ↔ Wi-Fi local quand le lien est instable, retour au BLE ensuite, état du lien toujours visible | Qu'aucun événement n'est perdu quand le Bluetooth lâche |
-| **v0.6** · Court calibré | Le joueur touche les 4 coins, homographie vers le court réel, lignes projetées dans le replay | Que la géométrie tient sur un vrai court |
-| **v0.7** · Court détecté | Détection automatique des lignes du court et du filet, les 4 coins restent en secours | Que la calibration manuelle devient inutile |
-| **v0.8** · Balle suivie | Suivi de la balle dans le replay (seuil de couleur + filtre de Kalman), trajectoire affichée | Que la balle se suit sans modèle de vision |
+| **v0.5** · Balle suivie | Suivi de la balle dans le replay (seuil de couleur + filtre de Kalman), trajectoire affichée | Que la balle se suit sans modèle de vision |
+| **v0.6** · Wi-Fi de secours | Bascule automatique BLE ↔ Wi-Fi local quand le lien est instable, retour au BLE ensuite, état du lien toujours visible | Qu'aucun événement n'est perdu quand le Bluetooth lâche |
+| **v0.7** · Court calibré | Le joueur touche les 4 coins, homographie vers le court réel, lignes projetées dans le replay | Que la géométrie tient sur un vrai court |
+| **v0.8** · Court détecté | Détection automatique des lignes du court et du filet, les 4 coins restent en secours | Que la calibration manuelle devient inutile |
 | **v0.9** · Rebond et confiance | Rebond (trajectoire + pic sonore), recadrage sur le moment contesté, dedans/dehors avec un indice de confiance, jamais un verdict | Que la détection aide réellement à lire l'image et renforce la confiance des joueurs |
 | **v1.0** · Match complet | Test terrain d'une heure, chauffe et batterie maîtrisées, finitions | Que l'app tient un vrai match |
 | Plus tard | Voir l'angle d'un autre téléphone (Wi-Fi), reprise du rôle d'hôte, interface du double | |
 
-Les tests qui lèvent un risque technique passent au début de la version qui en dépend : enregistreur Android et image par image (v0.1), BLE iPhone ↔ Android (v0.2), micro partagé caméra + Vosk (v0.4), lecture des images d'un clip avec OpenCV (v0.6).
+Les tests qui lèvent un risque technique passent au début de la version qui en dépend : enregistreur Android et image par image (v0.1), BLE iPhone ↔ Android (v0.2), micro partagé caméra + Vosk (v0.4), lecture des images d'un clip avec OpenCV (v0.5).
 
 ## Stack
 
@@ -146,7 +146,7 @@ Avec un seul téléphone, c'est le même chemin avec un seul candidat. Avec plus
 - On peut aussi **fermer le replay sans rien changer** au score.
 - Avec la lecture assistée (v0.9), le replay peut afficher une **suggestion chiffrée** (« 80 % sûr que la balle est sortie »), jamais un avis tranché ni un bouton qui l'applique.
 
-## Lecture assistée (v0.6 à v0.9)
+## Lecture assistée (v0.5, v0.7 à v0.9)
 
 Tourne **uniquement sur le point demandé**, jamais en continu.
 
