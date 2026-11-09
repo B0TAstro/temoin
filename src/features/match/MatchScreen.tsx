@@ -142,7 +142,13 @@ export function MatchScreen({ session }: { session: Session & { view: MatchView 
         </View>
       </SafeAreaView>
 
-      {showQr && <InviteOverlay sessionId={session.sessionId} onClose={() => setShowQr(false)} />}
+      {showQr && (
+        <InviteOverlay
+          sessionId={session.sessionId}
+          sessionKey={session.key}
+          onClose={() => setShowQr(false)}
+        />
+      )}
 
       {replay && (
         <ReplayScreen

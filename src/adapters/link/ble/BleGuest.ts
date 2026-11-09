@@ -12,7 +12,9 @@ import {
 } from 'munim-bluetooth';
 import { Platform } from 'react-native';
 
-import { Decoder, encode } from './framing';
+import type { Codec } from '@/core/protocol/codec';
+
+import { encodeLine, LineDecoder } from './framing';
 import { advertisedName, sameUuid, SERVICE, TO_GUESTS, TO_HOST } from './gatt';
 import { SerialSender } from './SerialSender';
 import type { GuestTransport, LinkStatus } from '../Transport';
@@ -25,7 +27,7 @@ const RETRY_MS = 2000;
  */
 export class BleGuest<In, Out> implements GuestTransport<Out> {
   private deviceId: string | undefined;
-  private decoder = new Decoder<In>();
+  private decoder = new LineDecoder();
   private readonly sender = new SerialSender();
   private unsubscribe: (() => void)[] = [];
   private stopped = false;
@@ -33,6 +35,7 @@ export class BleGuest<In, Out> implements GuestTransport<Out> {
 
   constructor(
     private readonly sessionId: string,
+    private readonly codec: Codec<In, Out>,
     private readonly onMessage: (message: In) => void,
     private readonly onStatus: (status: LinkStatus) => void,
     /** Called once connected and subscribed, to ask for the whole log. */
@@ -55,7 +58,10 @@ export class BleGuest<In, Out> implements GuestTransport<Out> {
       addEventListener('characteristicValueChanged', (change) => {
         if (change.deviceId !== this.deviceId || !sameUuid(change.characteristicUUID, TO_GUESTS))
           return;
-        for (const message of this.decoder.push(change.value)) this.onMessage(message);
+        for (const line of this.decoder.push(change.value)) {
+          const message = this.codec.decode(line);
+          if (message !== null) this.onMessage(message);
+        }
       }),
       addEventListener('deviceDisconnected', ({ deviceId }) => {
         if (deviceId !== this.deviceId) return;
@@ -69,7 +75,7 @@ export class BleGuest<In, Out> implements GuestTransport<Out> {
   send(message: Out) {
     const deviceId = this.deviceId;
     if (deviceId == null) return;
-    this.sender.send(encode(message), (chunk) =>
+    this.sender.send(encodeLine(this.codec.encode(message)), (chunk) =>
       writeCharacteristic(deviceId, SERVICE, TO_HOST, chunk, 'write'),
     );
   }
@@ -86,7 +92,7 @@ export class BleGuest<In, Out> implements GuestTransport<Out> {
   private search() {
     if (this.stopped) return;
     this.deviceId = undefined;
-    this.decoder = new Decoder<In>();
+    this.decoder = new LineDecoder();
     this.onStatus('searching');
     startScan({ serviceUUIDs: [SERVICE] });
   }

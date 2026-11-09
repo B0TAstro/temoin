@@ -11,31 +11,34 @@ import {
   useObjectOutput,
 } from 'react-native-vision-camera';
 
-import { parseJoinLink } from '@/core/protocol/joinLink';
+import { type Join, parseJoinLink, toJoin } from '@/core/protocol/joinLink';
 import { Button } from '@/ui/Button';
 import { colors, radius } from '@/ui/theme';
 
 const QR_TYPES: ScannedObjectType[] = ['qr'];
 
-function openMatch(sessionId: string) {
+function openMatch({ sessionId, key }: Join) {
   // replace: the scanner unmounts and frees the camera for the match screen.
-  router.replace({ pathname: '/match', params: { role: 'guest', s: sessionId } });
+  router.replace({ pathname: '/match', params: { role: 'guest', s: sessionId, k: key } });
 }
 
 /** Scans the host's QR code (DESIGN §5.3). Also reached through the temoin://join link. */
 export default function JoinScreen() {
-  const { s } = useLocalSearchParams<{ s?: string }>();
+  const params = useLocalSearchParams<{ s?: string; k?: string; v?: string }>();
+  const linked = toJoin(params);
   const { hasPermission, canRequestPermission, requestPermission } = useCameraPermission();
   const [invalid, setInvalid] = useState(false);
   const done = useRef(false);
 
   // Opened from the iPhone Camera app: the link already carries the session.
+  const linkedId = linked?.sessionId;
+  const linkedKey = linked?.key;
   useEffect(() => {
-    if (s && !done.current) {
+    if (linkedId && linkedKey && !done.current) {
       done.current = true;
-      openMatch(s);
+      openMatch({ sessionId: linkedId, key: linkedKey });
     }
-  }, [s]);
+  }, [linkedId, linkedKey]);
 
   useEffect(() => {
     if (!hasPermission && canRequestPermission) requestPermission();
@@ -46,11 +49,10 @@ export default function JoinScreen() {
     onObjectsScanned: (objects: ScannedObject[]) => {
       if (done.current) return;
       for (const object of objects) {
-        const sessionId =
-          isScannedCode(object) && object.value ? parseJoinLink(object.value) : null;
-        if (sessionId) {
+        const join = isScannedCode(object) && object.value ? parseJoinLink(object.value) : null;
+        if (join) {
           done.current = true;
-          openMatch(sessionId);
+          openMatch(join);
           return;
         }
       }

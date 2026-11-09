@@ -4,17 +4,21 @@ import { BleHost } from '@/adapters/link/ble/BleHost';
 import { LocalHost } from '@/adapters/link/LocalTransport';
 import type { HostTransport, LinkStatus } from '@/adapters/link/Transport';
 import { type LoggedEvent, type MatchEvent, replay } from '@/core/events/matchLog';
+import { randomBytes } from '@/adapters/random';
 import { HostLog } from '@/core/protocol/hostLog';
+import { decodeSessionKey } from '@/core/protocol/joinLink';
 import type { GuestMessage, HostMessage } from '@/core/protocol/messages';
+import { SealedCodec } from '@/core/protocol/SealedCodec';
 
 import type { Session } from './Session';
 import { type SetupForm, toSetup } from './setup';
 
 /**
  * The host keeps the log (HostLog) and sends every new event to its guests. Works with no guest
- * at all, and with no Bluetooth: the match then goes on with no radio.
+ * at all, and with no Bluetooth: the match then goes on with no radio. Every message is sealed
+ * with the session key.
  */
-export function useHostSession(sessionId: string, form: SetupForm): Session {
+export function useHostSession(sessionId: string, key: string, form: SetupForm): Session {
   const setup = useMemo(() => toSetup(form), [form]);
   const hostLog = useMemo(() => new HostLog(setup), [setup]);
   const [log, setLog] = useState<readonly LoggedEvent[]>(hostLog.events);
@@ -33,8 +37,12 @@ export function useHostSession(sessionId: string, form: SetupForm): Session {
   );
 
   useEffect(() => {
+    const bytes = decodeSessionKey(key);
+    if (!bytes) throw new Error('Invalid session key');
+    const codec = new SealedCodec<GuestMessage, HostMessage<SetupForm>>(bytes, randomBytes);
     const ble = new BleHost<GuestMessage, HostMessage<SetupForm>>(
       sessionId,
+      codec,
       (message) => {
         if (message.t === 'intent') dispatch(message.event);
         else ble.broadcast({ t: 'snapshot', setup: form, log: [...hostLog.events] });
@@ -62,8 +70,8 @@ export function useHostSession(sessionId: string, form: SetupForm): Session {
       transport.current?.stop();
       transport.current = null;
     };
-  }, [sessionId, form, hostLog, dispatch]);
+  }, [sessionId, key, form, hostLog, dispatch]);
 
   const view = useMemo(() => replay(setup, log), [setup, log]);
-  return { role: 'host', sessionId, form, view, log, dispatch, link, guests };
+  return { role: 'host', sessionId, key, form, view, log, dispatch, link, guests };
 }

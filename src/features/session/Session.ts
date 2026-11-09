@@ -7,6 +7,8 @@ import type { SetupForm } from './setup';
 export type Session = {
   role: 'host' | 'guest';
   sessionId: string;
+  /** The session key, shown in the host's QR code. */
+  key: string;
   /** Undefined on a guest until the host has sent the match. */
   form?: SetupForm;
   view?: MatchView;

@@ -15,3 +15,12 @@ export function receiveEvent(log: readonly LoggedEvent[], event: LoggedEvent): R
   if (event.seq === log.length + 1) return { log: [...log, event], gap: false };
   return { log, gap: true };
 }
+
+/**
+ * The whole log from the host, unless it is shorter than the one the guest has: the log only
+ * grows, so a shorter one can only be an old snapshot sent back by someone else.
+ */
+export const receiveSnapshot = (
+  log: readonly LoggedEvent[],
+  snapshot: readonly LoggedEvent[],
+): readonly LoggedEvent[] => (snapshot.length < log.length ? log : snapshot);

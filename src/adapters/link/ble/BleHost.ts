@@ -7,7 +7,9 @@ import {
   updateCharacteristicValue,
 } from 'munim-bluetooth';
 
-import { Decoder, encode } from './framing';
+import type { Codec } from '@/core/protocol/codec';
+
+import { encodeLine, LineDecoder } from './framing';
 import { advertisedName, sameUuid, SERVICE, TO_GUESTS, TO_HOST } from './gatt';
 import { SerialSender } from './SerialSender';
 import type { HostTransport } from '../Transport';
@@ -17,13 +19,14 @@ import type { HostTransport } from '../Transport';
  * notifies every subscribed guest. Notifications go to all guests at once.
  */
 export class BleHost<In, Out> implements HostTransport<Out> {
-  private readonly decoders = new Map<string, Decoder<In>>();
+  private readonly decoders = new Map<string, LineDecoder>();
   private readonly guests = new Set<string>();
   private readonly sender = new SerialSender();
   private unsubscribe: (() => void)[] = [];
 
   constructor(
     private readonly sessionId: string,
+    private readonly codec: Codec<In, Out>,
     private readonly onMessage: (message: In) => void,
     private readonly onGuests: (count: number) => void,
   ) {}
@@ -37,10 +40,13 @@ export class BleHost<In, Out> implements HostTransport<Out> {
         if (!sameUuid(request.characteristicUUID, TO_HOST)) return;
         let decoder = this.decoders.get(request.centralId);
         if (!decoder) {
-          decoder = new Decoder<In>();
+          decoder = new LineDecoder();
           this.decoders.set(request.centralId, decoder);
         }
-        for (const message of decoder.push(request.value)) this.onMessage(message);
+        for (const line of decoder.push(request.value)) {
+          const message = this.codec.decode(line);
+          if (message !== null) this.onMessage(message);
+        }
       }),
       addEventListener('peripheralSubscribed', ({ centralId }) => {
         this.guests.add(centralId);
@@ -70,7 +76,7 @@ export class BleHost<In, Out> implements HostTransport<Out> {
   }
 
   broadcast(message: Out) {
-    this.sender.send(encode(message), (chunk) =>
+    this.sender.send(encodeLine(this.codec.encode(message)), (chunk) =>
       updateCharacteristicValue(SERVICE, TO_GUESTS, chunk, true),
     );
   }

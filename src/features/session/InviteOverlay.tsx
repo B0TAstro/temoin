@@ -5,11 +5,22 @@ import { Button } from '@/ui/Button';
 import { QrCode } from '@/ui/QrCode';
 import { colors } from '@/ui/theme';
 
-/** The host's QR code, over the match: another phone scans it to join, at any time. */
-export function InviteOverlay({ sessionId, onClose }: { sessionId: string; onClose: () => void }) {
+/**
+ * The host's QR code, over the match: another phone scans it to join, at any time. It carries the
+ * session key: only a phone that scanned it can read or change the score.
+ */
+export function InviteOverlay({
+  sessionId,
+  sessionKey,
+  onClose,
+}: {
+  sessionId: string;
+  sessionKey: string;
+  onClose: () => void;
+}) {
   return (
     <View style={styles.overlay}>
-      <QrCode value={buildJoinLink(sessionId)} size={240} />
+      <QrCode value={buildJoinLink({ sessionId, key: sessionKey })} size={240} />
       <View style={styles.text}>
         <Text style={styles.title}>Scannez pour rejoindre</Text>
         <Text style={styles.code}>Session {sessionId}</Text>

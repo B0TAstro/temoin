@@ -92,7 +92,7 @@ Règles :
 - **Un fichier = une responsabilité**, un export principal, nommé comme lui (`PascalCase` pour composants et classes, `camelCase` pour hooks et fonctions). Pas de fichier `index.ts` qui ré-exporte.
 - Les écrans (`app/`) et les composants ne portent pas de règle métier : elle va dans `core` (pure) ou dans un hook de `features`.
 - Chaque brique native (caméra, voix, liaison, OpenCV) est derrière une interface, avec une version factice pour les tests.
-- **Liaison en trois couches** : le protocole (`core/protocol`, quels messages et dans quel ordre) ne connaît pas le transport ; le transport (`adapters/link`, `HostTransport` / `GuestTransport`) fait passer les messages ; le format sur le fil (`ble/framing.ts`, paquets de 180 octets) est un détail du BLE. Le Wi-Fi (v0.6) ajoute un transport, sans toucher au protocole.
+- **Liaison en trois couches** : le protocole (`core/protocol`, quels messages et dans quel ordre) ne connaît pas le transport ; le transport (`adapters/link`, `HostTransport` / `GuestTransport`) fait passer les messages ; le codec (`core/protocol/SealedCodec.ts`) chiffre chaque message en une ligne de texte ; le format sur le fil (`ble/framing.ts`, paquets de 180 octets) est un détail du BLE. Le Wi-Fi (v0.6) ajoute un transport, sans toucher au protocole.
 - Le score n'est jamais stocké : il est dérivé du journal d'événements.
 
 ### Session : de 1 à N téléphones, une seule architecture
@@ -126,6 +126,7 @@ Coût : un événement fait quelques centaines d'octets, la diffusion est propor
 3. **Bascule Wi-Fi** : si le BLE est instable, les téléphones passent sur le Wi-Fi local (Wi-Fi du club ou partage de connexion d'un des téléphones). L'hôte ouvre un petit serveur local, son adresse est dans le QR code. La lib serveur reste à choisir et valider.
 4. **Retour au BLE** quand il redevient stable. Comme les messages sont numérotés, une bascule ne perd rien.
 5. L'état du lien est toujours visible à l'écran (Bluetooth, Wi-Fi ou perdu). Si tout est coupé, chaque téléphone continue de filmer.
+6. **Lien chiffré** : l'hôte tire une clé de session (32 octets, `expo-crypto`) qui n'est que dans le QR code, jamais envoyée par radio. Chaque message est chiffré et signé avec elle (XChaCha20-Poly1305, `@noble/ciphers`, dans `core/protocol/SealedCodec.ts`) : sans le QR, un téléphone à portée ne lit ni ne modifie le score. Un message déjà reçu (même nonce) est ignoré, et un invité ignore un journal complet plus court que le sien (le journal ne fait que grandir) : on ne peut pas rejouer un vieux message enregistré. `PROTOCOL_VERSION` 2.
 
 ## Enregistrement : le buffer se compte en points
 

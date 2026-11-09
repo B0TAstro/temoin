@@ -1,20 +1,13 @@
 /**
- * How a message travels over BLE: JSON in pure ASCII, ended by a newline, cut into hex packets
- * that fit one write or notification. The messages themselves are in core/protocol/messages.
+ * How a line travels over BLE: ended by a newline, cut into hex packets that fit one write or
+ * notification. The line itself (a sealed message) comes from the session's codec, in
+ * core/protocol: here it is just ASCII.
  */
 
 /** Max bytes per BLE packet: fits the usual negotiated MTU (185 on iOS, 517 asked on Android). */
 export const CHUNK_BYTES = 180;
-/** JSON never contains a raw newline, so it ends a message. */
+/** A line never contains a raw newline (base64), so it ends a message. */
 const END = '\n';
-
-/** JSON in pure ASCII: accents become \u escapes, so one character is one byte on the wire. */
-function toAscii(message: unknown): string {
-  return JSON.stringify(message).replace(
-    /[\u007f-￿]/g,
-    (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`,
-  );
-}
 
 const toHex = (ascii: string) =>
   Array.from(ascii, (c) => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
@@ -27,9 +20,9 @@ function fromHex(hex: string): string {
   return text;
 }
 
-/** One message as hex packets of at most CHUNK_BYTES, ready for the BLE library. */
-export function encode(message: unknown): string[] {
-  const text = toAscii(message) + END;
+/** One ASCII line as hex packets of at most CHUNK_BYTES, ready for the BLE library. */
+export function encodeLine(line: string): string[] {
+  const text = line + END;
   const chunks: string[] = [];
   for (let i = 0; i < text.length; i += CHUNK_BYTES) {
     chunks.push(toHex(text.slice(i, i + CHUNK_BYTES)));
@@ -37,24 +30,22 @@ export function encode(message: unknown): string[] {
   return chunks;
 }
 
-/** Puts packets back together, one decoder per sender. BLE keeps them in order. */
-export class Decoder<T> {
+/**
+ * Puts packets back together into lines, one decoder per sender. BLE keeps them in order; a line
+ * broken by a lost packet fails the codec and is dropped, the next newline starts afresh.
+ */
+export class LineDecoder {
   private buffer = '';
 
-  push(hex: string): T[] {
+  push(hex: string): string[] {
     this.buffer += fromHex(hex);
-    const messages: T[] = [];
+    const lines: string[] = [];
     let end = this.buffer.indexOf(END);
     while (end !== -1) {
-      const line = this.buffer.slice(0, end);
+      lines.push(this.buffer.slice(0, end));
       this.buffer = this.buffer.slice(end + 1);
-      try {
-        messages.push(JSON.parse(line) as T);
-      } catch {
-        // A corrupted message is dropped; the guest asks for the whole log again.
-      }
       end = this.buffer.indexOf(END);
     }
-    return messages;
+    return lines;
   }
 }
