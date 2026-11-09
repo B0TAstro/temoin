@@ -21,7 +21,7 @@ Between professional systems (around $100,000 per court) and stats-oriented amat
 1. **Create a session** on one phone. Other phones can join by scanning a QR code, now or later in the match.
 2. **Place the phones** behind the baselines (one is enough, each extra phone adds an angle). The app detects the court lines.
 3. **Play.** Each phone films point by point and keeps only the current and previous points. The score is updated by a tap, or by voice when the server calls it out.
-4. **Disagree? Press VAR.** Every phone opens the replay of the same point from its own angle. The players choose: point for one side, point replayed, or the fallback rule agreed before the match.
+4. **Disagree? Press VAR.** Every phone opens the replay of the same point from its own angle. The players decide and enter the outcome: point for one side, point for the other, or point replayed, confirmed by both sides. If they still disagree, they close the replay and the score stays as it was: the app shows what happened, it does not settle a lasting dispute.
 5. **End of match.** All videos are deleted.
 
 Principles:

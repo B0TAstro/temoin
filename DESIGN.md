@@ -40,7 +40,7 @@ Objectif : moins d'une minute entre l'ouverture de l'app et le premier point fil
 Deux gros boutons empilés : **Créer une session** (vert) et **Rejoindre une session** (contour blanc). Rien d'autre.
 
 ### 5.2 Écran 2a · Créer
-Un seul écran, tout pré-rempli : simple ou double, noms des joueurs (prénoms ou initiales), format du match, règle de repli (**« Le doute profite à l'adversaire »** par défaut, ou « Point rejoué »). Bouton bas pleine largeur : **Créer**.
+Un seul écran, tout pré-rempli : simple ou double, noms des joueurs (prénoms ou initiales), format du match. Bouton bas pleine largeur : **Créer**.
 
 ### 5.3 Écran 2b · Rejoindre
 Caméra ouverte avec un cadre de visée : « Scannez le QR code du téléphone hôte ».
@@ -89,7 +89,7 @@ S'ouvre **sur tous les téléphones de la session en même temps**, quel que soi
 │  ◀◀ image   ▶ / ❚❚   image ▶▶      x0.25  x0.5  x1            │
 │  ├─────────●────────◆─────────────◆───────────────────────┤   │
 │                                                                │
-│  [ Point Léa ]   [ Point Tom ]   [ Point rejoué ]   [ Repli ]  │
+│  [ Point Léa ]      [ Point Tom ]      [ Point rejoué ]        │
 └────────────────────────────────────────────────────────────────┘
 ```
 
@@ -98,7 +98,9 @@ S'ouvre **sur tous les téléphones de la session en même temps**, quel que soi
 - Pincer pour zoomer, glisser pour se déplacer, double-tap pour revenir.
 - Timeline épaisse (doigt), rebonds détectés en losanges jaunes (v0.9).
 - Sélecteur de point (point en cours, précédent).
-- Quatre issues explicites, toujours visibles : point pour un camp, point pour l'autre, point rejoué, **appliquer la règle de repli** (le libellé rappelle la règle choisie). Le choix est envoyé à l'autre téléphone, qui doit confirmer.
+- Trois boutons toujours visibles, qui servent uniquement à **saisir le résultat décidé par les joueurs** : point pour un camp, point pour l'autre, point rejoué. Le choix est envoyé à l'autre camp, qui doit confirmer.
+- **← Retour au score** ferme le replay sans rien changer : l'app ne gère pas un désaccord qui persiste.
+- v0.9 : une suggestion chiffrée peut s'afficher (« 80 % sûr que la balle est sortie »), jamais un avis tranché, et aucun bouton ne l'applique d'office.
 
 ### 5.7 Analyse (v0.6 à v0.9, dans le replay)
 Déclenchée par un tap sur un losange de rebond, puis **Analyser**.

@@ -4,7 +4,7 @@
 
 ## Le projet
 
-Application mobile pour les matchs de tennis amateurs **sans arbitre**. Les téléphones de la session (**de 1 à N** : un seul suffit pour jouer, chaque téléphone en plus ajoute un angle) filment le match point par point et affichent tous le même score, validé par les deux camps. En cas de désaccord sur une balle, un joueur appuie sur **VAR** depuis n'importe quel téléphone : **tous** les téléphones de la session ouvrent le replay du point joué, chacun depuis son propre point de vue (ralenti, image par image, zoom). **L'app ne tranche jamais** : les joueurs décident devant la même image, et une règle de repli choisie avant le match s'applique si le désaccord persiste.
+Application mobile pour les matchs de tennis amateurs **sans arbitre**. Les téléphones de la session (**de 1 à N** : un seul suffit pour jouer, chaque téléphone en plus ajoute un angle) filment le match point par point et affichent tous le même score, validé par les deux camps. En cas de désaccord sur une balle, un joueur appuie sur **VAR** depuis n'importe quel téléphone : **tous** les téléphones de la session ouvrent le replay du point joué, chacun depuis son propre point de vue (ralenti, image par image, zoom). **L'app ne tranche jamais** : elle montre ce qui s'est passé, les joueurs décident devant la même image. Elle ne gère pas un désaccord qui persiste : sans accord, on ferme le replay et le score ne change pas.
 
 Principes non négociables :
 1. **Montrer, pas trancher.** Toute aide (rebond, dedans/dehors) est une indication avec son incertitude, jamais un verdict.
@@ -142,7 +142,9 @@ Avec un seul téléphone, c'est le même chemin avec un seul candidat. Avec plus
 - **Tous** les téléphones ouvrent le replay du **même point** (même numéro, issu du journal), chacun avec **son propre clip**, donc son propre angle.
 - Avec un seul téléphone, c'est simplement le replay local.
 - **Voir l'angle d'un autre téléphone** (proposition, après v1.0) : on ne transfère pas le clip entier (plusieurs dizaines de Mo) mais un **extrait court** autour du moment contesté, demandé à la volée, et **seulement si le Wi-Fi local est disponible** (le BLE est trop lent pour de la vidéo). L'extrait est supprimé à la fin du litige.
-- La décision (point pour un camp, point rejoué, règle de repli) est proposée sur un téléphone, validée par l'autre camp, puis diffusée : tous les écrans reviennent au score mis à jour.
+- Les boutons du replay servent uniquement à **saisir le résultat décidé par les joueurs** : point pour un camp, point pour l'autre, point rejoué. Le résultat est proposé sur un téléphone, validé par l'autre camp, puis diffusé : tous les écrans reviennent au score mis à jour.
+- On peut aussi **fermer le replay sans rien changer** au score.
+- Avec la lecture assistée (v0.9), le replay peut afficher une **suggestion chiffrée** (« 80 % sûr que la balle est sortie »), jamais un avis tranché ni un bouton qui l'applique.
 
 ## Lecture assistée (v0.6 à v0.9)
 
