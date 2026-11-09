@@ -58,22 +58,41 @@ Les libs marquées « candidate » ou non encore testées sur Android doivent ê
 Schémas : `docs/schemas/architecture.png`, `docs/schemas/parcours.png` et `docs/schemas/synchro.png` (voix et VAR entre téléphones).
 
 ```
+models/         modèle Vosk (téléchargé par `npm run setup:model`, jamais commité)
+modules/        modules natifs locaux (audio-envelope : volume de la piste son d'un clip)
+assets/         icon/ (icône, splash) et images/ (images de l'interface) uniquement
 src/
-├── app/        écrans (expo-router)
-├── ui/         composants du design system (voir DESIGN.md)
-├── features/   session, enregistrement, replay, voix, liaison, analyse
-├── adapters/   briques natives derrière une interface (+ versions factices)
+├── app/        routes expo-router, minces : elles assemblent, aucune règle métier
+├── ui/         composants du design system (voir DESIGN.md) : Button, IconButton, TabButton, MessageScreen…
+├── features/   le code React, par fonctionnalité
+│   ├── match/      écran de match (colonnes, caméra du match)
+│   ├── session/    hôte et invité (useHostSession, useGuestSession), QR, état du lien
+│   ├── recording/  un fichier par point (ClipRecorder), coupe des clips depuis le journal
+│   ├── replay/     VAR : navigation, lecteur, panneau de lecture, décisions, pics sonores
+│   ├── score/      affichage du score
+│   └── voice/      écoute de l'annonce (useVoice)
+├── adapters/   briques natives derrière une interface
+│   ├── link/       Transport.ts (le contrat), LocalTransport (sans radio), ble/ (gatt, framing, BleHost, BleGuest)
+│   ├── camera/     SegmentRecorder (VisionCamera)
+│   ├── voice/      VoskEngine
+│   ├── audio/      enveloppe sonore (module audio-envelope)
+│   └── files.ts    chemins et suppression des fichiers
 └── core/       TypeScript pur, zéro import React Native, testé sans téléphone
-    ├── score/      machine à états du tennis
-    ├── events/     journal d'événements
-    ├── clips/      file des clips
-    ├── protocol/   messages entre téléphones
+    ├── score/      machine à états du tennis, annonces, libellés
+    ├── events/     journal d'événements, résultat du VAR → événements
+    ├── clips/      file des clips, timeline
+    ├── protocol/   messages entre téléphones, HostLog (hôte), receiveEvent (invité), lien du QR
+    ├── voice/      texte reconnu → score (POC voix)
+    ├── audio/      pics sonores
     └── cv/         lignes, balle, rebond, homographie, confiance
 ```
 
 Règles :
-- `core` n'importe jamais React Native ni une lib native.
+- `core` n'importe jamais React Native ni une lib native (règle ESLint).
+- **Un fichier = une responsabilité**, un export principal, nommé comme lui (`PascalCase` pour composants et classes, `camelCase` pour hooks et fonctions). Pas de fichier `index.ts` qui ré-exporte.
+- Les écrans (`app/`) et les composants ne portent pas de règle métier : elle va dans `core` (pure) ou dans un hook de `features`.
 - Chaque brique native (caméra, voix, liaison, OpenCV) est derrière une interface, avec une version factice pour les tests.
+- **Liaison en trois couches** : le protocole (`core/protocol`, quels messages et dans quel ordre) ne connaît pas le transport ; le transport (`adapters/link`, `HostTransport` / `GuestTransport`) fait passer les messages ; le format sur le fil (`ble/framing.ts`, paquets de 180 octets) est un détail du BLE. Le Wi-Fi (v0.6) ajoute un transport, sans toucher au protocole.
 - Le score n'est jamais stocké : il est dérivé du journal d'événements.
 
 ### Session : de 1 à N téléphones, une seule architecture
@@ -101,7 +120,7 @@ Coût : un événement fait quelques centaines d'octets, la diffusion est propor
 
 ### Liaison : Bluetooth d'abord, Wi-Fi en secours
 
-0. **Un seul téléphone** : transport local, aucune radio utilisée.
+0. **Un seul téléphone** : l'hôte annonce quand même la session en BLE, pour qu'un invité puisse rejoindre à tout moment. Si le Bluetooth est refusé ou indisponible, il passe sur `LocalHost` (aucune radio) et le match continue.
 1. **BLE (prioritaire)** : l'hôte émet, les invités s'y connectent grâce au QR code. Le nombre d'invités qu'un téléphone accepte en BLE dépend du matériel : à mesurer. Au-delà, ou si c'est instable, Wi-Fi.
 2. **Heartbeat** : un ping par seconde. Le lien est jugé instable après plusieurs pongs manqués ou un aller-retour trop long (seuils à régler en test).
 3. **Bascule Wi-Fi** : si le BLE est instable, les téléphones passent sur le Wi-Fi local (Wi-Fi du club ou partage de connexion d'un des téléphones). L'hôte ouvre un petit serveur local, son adresse est dans le QR code. La lib serveur reste à choisir et valider.
