@@ -1,0 +1,44 @@
+name: 🚀 Release
+
+# Push a tag such as v0.1.0 (it must match the version in app.json), or run it by hand on an existing tag.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to release (e.g. v0.0.0)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    name: 🤖 Android release
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: 🔖 Check the tag matches app.json
+        run: |
+          version="v$(node -p "require('./app.json').expo.version")"
+          test "$TAG" = "$version" || (echo "Tag $TAG does not match app.json version $version" && exit 1)
+
+      - name: 🏗️ Build
+        id: build
+        uses: ./.github/actions/build-android
+
+      - name: 🚀 Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp "${{ steps.build.outputs.apk-path }}" "temoin-$TAG.apk"
+          gh release create "$TAG" "temoin-$TAG.apk" --title "Témoin $TAG" --generate-notes --verify-tag \
+            || gh release upload "$TAG" "temoin-$TAG.apk" --clobber
