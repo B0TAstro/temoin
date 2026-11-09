@@ -10,6 +10,7 @@ import {
   useCameraDevice,
   useCameraPermission,
   useFrameOutput,
+  useMicrophonePermission,
   useVideoOutput,
   type CameraSessionConfig,
 } from 'react-native-vision-camera';
@@ -142,9 +143,15 @@ function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
   const [showQr, setShowQr] = useState(false);
   const [voiceOn, setVoiceOn] = useState(true);
 
+  // The microphone is asked once the camera is granted, so the two prompts do not overlap. Refused,
+  // the video is simply silent.
+  const microphone = useMicrophonePermission();
+  const { hasPermission: micGranted, canRequestPermission: canAskMic } = microphone;
+  const askMic = microphone.requestPermission;
   useEffect(() => {
     if (!hasPermission && canRequestPermission) requestPermission();
-  }, [hasPermission, canRequestPermission, requestPermission]);
+    else if (hasPermission && !micGranted && canAskMic) askMic();
+  }, [hasPermission, canRequestPermission, requestPermission, micGranted, canAskMic, askMic]);
 
   const frameOutput = useFrameOutput({
     targetResolution: CommonResolutions.VGA_16_9,
@@ -161,6 +168,8 @@ function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
     enablePersistentRecorder: true,
     fileType: 'mp4',
     targetBitRate: TARGET_BIT_RATE,
+    // The sound of the rally helps read the replay, and its peaks are marked on the timeline.
+    enableAudio: micGranted,
   });
 
   // Recording pauses during the replay, to spare the phone (heat, battery).

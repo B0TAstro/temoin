@@ -1,0 +1,48 @@
+diff --git a/node_modules/react-native-vosk/ios/Vosk.mm b/node_modules/react-native-vosk/ios/Vosk.mm
+index 4556403..7263f22 100644
+--- a/node_modules/react-native-vosk/ios/Vosk.mm
++++ b/node_modules/react-native-vosk/ios/Vosk.mm
+@@ -128,13 +128,14 @@ RCT_EXPORT_MODULE()
+   // Configure session category first (allowed even before permission)
+   NSError *catErr = nil;
+   @try {
+-    if (@available(iOS 10.0, *)) {
+-      [audioSession setCategory:AVAudioSessionCategoryRecord
+-                           mode:AVAudioSessionModeMeasurement
+-                        options:0
++    // Temoin: the camera records the sound too and owns the session (play and record). Joining
++    // it instead of switching to record-only keeps the video's audio running.
++    if (audioSession.category != AVAudioSessionCategoryPlayAndRecord) {
++      [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
++                           mode:AVAudioSessionModeDefault
++                        options:AVAudioSessionCategoryOptionMixWithOthers |
++                                AVAudioSessionCategoryOptionDefaultToSpeaker
+                           error:&catErr];
+-    } else {
+-      [audioSession setCategory:AVAudioSessionCategoryRecord error:&catErr];
+     }
+     if (catErr) {
+       NSString *msg = [NSString stringWithFormat:@"Audio session category error: %@", catErr.localizedDescription];
+@@ -360,20 +361,8 @@ RCT_EXPORT_MODULE()
+     _timeoutSource = nil;
+   }
+ 
+-  AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+-  NSError *err = nil;
+-  if (@available(iOS 10.0, *)) {
+-    [audioSession setCategory:AVAudioSessionCategoryPlayback
+-                         mode:AVAudioSessionModeDefault
+-                      options:0
+-                        error:&err];
+-  } else {
+-    [audioSession setCategory:AVAudioSessionCategoryPlayback error:&err];
+-  }
+-  [audioSession
+-        setActive:NO
+-      withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+-            error:&err];
++  // Temoin: the session is left as it is. Vosk restarts at every game to change its grammar, and
++  // deactivating the session there would cut the camera's sound mid-match.
+ }
+ 
+ @end

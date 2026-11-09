@@ -9,10 +9,14 @@ import type { SideId } from '@/core/score/types';
 import { colors, radius, touch } from '@/ui/theme';
 import { ZoomableView } from '@/ui/ZoomableView';
 
+import { useSoundPeaks } from './useSoundPeaks';
+
 const RATES = [0.25, 0.5, 1] as const;
 const DEFAULT_RATE = 0.5;
 /** Where a point opens, in seconds before its end (the end is what players argue about). */
 const START_BEFORE_END_SECONDS = 1;
+/** A jump to a sound peak lands this long before it, to see the ball come in frame by frame. */
+const PEAK_LEAD_SECONDS = 0.15;
 
 export type ReplayClip = {
   key: string;
@@ -149,6 +153,7 @@ function ClipPlayer({ segments, fps, header, footer, onClose }: PlayerProps) {
   const [rate, setRate] = useState<number>(DEFAULT_RATE);
   const [timeS, setTimeS] = useState(initial.t);
   const [barWidth, setBarWidth] = useState(1);
+  const peaks = useSoundPeaks(timeline);
 
   const setTime = (t: number) => {
     timeRef.current = t;
@@ -166,6 +171,19 @@ function ClipPlayer({ segments, fps, header, footer, onClose }: PlayerProps) {
   const stepFrame = (direction: 1 | -1) => {
     setPlaying(false);
     seekTo(timeRef.current + direction / fps);
+  };
+
+  /** Pauses just before the next (or previous) loud sound: a hit, a bounce, or anything else. */
+  const jumpToPeak = (direction: 1 | -1) => {
+    const targets = peaks.map((t) => Math.max(0, t - PEAK_LEAD_SECONDS));
+    const now = timeRef.current;
+    const target =
+      direction === 1
+        ? targets.find((t) => t > now + 0.01)
+        : targets.findLast((t) => t < now - 0.01);
+    if (target === undefined) return;
+    setPlaying(false);
+    seekTo(target);
   };
 
   const togglePlay = () => {
@@ -223,7 +241,10 @@ function ClipPlayer({ segments, fps, header, footer, onClose }: PlayerProps) {
               resizeMode="contain"
               paused={!playing || index !== activeIndex}
               rate={rate}
-              muted
+              // Sound at normal speed only: stretched to slow motion it is no help. Played even with
+              // the phone on silent, which it usually is on court.
+              muted={rate !== 1 || index !== activeIndex}
+              ignoreSilentSwitch="ignore"
               repeat={false}
               progressUpdateInterval={33}
               onLoad={() => {
@@ -265,7 +286,20 @@ function ClipPlayer({ segments, fps, header, footer, onClose }: PlayerProps) {
             }}
           >
             <View style={[styles.trackFill, { width: `${Math.min(100, progress * 100)}%` }]} />
+            {peaks.map((t) => (
+              <View
+                key={t}
+                pointerEvents="none"
+                style={[styles.peak, { left: `${(t / timeline.totalS) * 100}%` }]}
+              />
+            ))}
           </Pressable>
+          {peaks.length > 0 && (
+            <View style={styles.row}>
+              <ControlButton label="◀ Son" onPress={() => jumpToPeak(-1)} />
+              <ControlButton label="Son ▶" onPress={() => jumpToPeak(1)} />
+            </View>
+          )}
 
           <View style={styles.row}>
             <ControlButton label="◀◀" onPress={() => stepFrame(-1)} />
@@ -404,6 +438,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   trackFill: { height: '100%', backgroundColor: colors.ball },
+  /** A sound peak: a mark, not a verdict. */
+  peak: { position: 'absolute', top: 6, bottom: 6, width: 2, backgroundColor: colors.line },
   row: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
   outcomes: { gap: 8 },
   button: {
