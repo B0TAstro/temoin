@@ -1,4 +1,4 @@
-package expo.modules.audioenvelope
+package expo.modules.soundlevels
 
 import android.media.AudioFormat
 import android.media.MediaCodec
@@ -12,17 +12,18 @@ import kotlin.math.sqrt
 
 private const val TIMEOUT_US = 10_000L
 
-class AudioEnvelopeModule : Module() {
+class SoundLevelsModule : Module() {
   override fun definition() = ModuleDefinition {
-    Name("AudioEnvelope")
+    Name("SoundLevels")
 
     AsyncFunction("read") { path: String, windowMs: Double ->
-      readEnvelope(path.removePrefix("file://"), windowMs)
+      readSoundLevels(path.removePrefix("file://"), windowMs)
     }
   }
 }
 
-private fun readEnvelope(path: String, windowMs: Double): List<Double> {
+/** The clip's loudness: one RMS per window of `windowMs`, from the start of the file. */
+private fun readSoundLevels(path: String, windowMs: Double): List<Double> {
   val extractor = MediaExtractor()
   try {
     extractor.setDataSource(path)
@@ -47,7 +48,7 @@ private fun readEnvelope(path: String, windowMs: Double): List<Double> {
 
 /** Feeds the AAC track to the decoder and folds the PCM it gives back into one RMS per window. */
 private fun decode(extractor: MediaExtractor, codec: MediaCodec, windowMs: Double): List<Double> {
-  val envelope = mutableListOf<Double>()
+  val levels = mutableListOf<Double>()
   val info = MediaCodec.BufferInfo()
   var inputDone = false
   var channels = 1
@@ -68,7 +69,7 @@ private fun decode(extractor: MediaExtractor, codec: MediaCodec, windowMs: Doubl
     sum += sample * sample
     count++
     if (count == window) {
-      envelope.add(sqrt(sum / count))
+      levels.add(sqrt(sum / count))
       sum = 0.0
       count = 0
     }
@@ -117,5 +118,5 @@ private fun decode(extractor: MediaExtractor, codec: MediaCodec, windowMs: Doubl
       if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) break
     }
   }
-  return envelope
+  return levels
 }

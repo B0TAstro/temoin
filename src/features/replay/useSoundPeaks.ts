@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import { readEnvelope } from '@/adapters/audio/envelope';
-import { ENVELOPE_WINDOW_MS, findPeaks } from '@/core/audio/peaks';
+import { readSoundLevels } from '@/adapters/sound/readSoundLevels';
+import { findSoundPeaks, LEVEL_WINDOW_MS } from '@/core/sound/soundPeaks';
 import type { Timeline } from '@/core/clips/timeline';
 
 /**
@@ -16,8 +16,8 @@ export function useSoundPeaks(timeline: Timeline): number[] {
     let cancelled = false;
     void Promise.all(
       timeline.segments.map(async (segment) => {
-        const envelope = await readEnvelope(segment.path, ENVELOPE_WINDOW_MS).catch(() => []);
-        return findPeaks(envelope)
+        const levels = await readSoundLevels(segment.path, LEVEL_WINDOW_MS).catch(() => []);
+        return findSoundPeaks(levels)
           .filter((t) => t <= segment.durationS)
           .map((t) => segment.offsetS + t);
       }),

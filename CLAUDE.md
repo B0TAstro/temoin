@@ -59,7 +59,7 @@ Schémas (Mermaid, affichés par GitHub) : `docs/architecture.md`, `docs/parcour
 
 ```
 models/         modèle Vosk (téléchargé par `npm run setup:model`, jamais commité)
-modules/        modules natifs locaux (audio-envelope : volume de la piste son d'un clip)
+modules/        modules natifs locaux (sound-levels : niveau sonore d'un clip, pour les pics du replay)
 assets/         icon/ (icône, splash) et images/ (images de l'interface) uniquement
 src/
 ├── app/        routes expo-router, minces : elles assemblent, aucune règle métier
@@ -75,7 +75,7 @@ src/
 │   ├── link/       Transport.ts (le contrat), LocalTransport (sans radio), ble/ (gatt, framing, BleHost, BleGuest)
 │   ├── camera/     SegmentRecorder (VisionCamera)
 │   ├── voice/      VoskEngine
-│   ├── audio/      enveloppe sonore (module audio-envelope)
+│   ├── sound/      niveau sonore d'un clip (module sound-levels)
 │   └── files.ts    chemins et suppression des fichiers
 └── core/       TypeScript pur, zéro import React Native, testé sans téléphone
     ├── score/      machine à états du tennis, annonces, libellés
@@ -83,7 +83,7 @@ src/
     ├── clips/      file des clips, timeline
     ├── protocol/   messages entre téléphones, HostLog (hôte), receiveEvent (invité), lien du QR
     ├── voice/      texte reconnu → score (POC voix)
-    ├── audio/      pics sonores
+    ├── sound/      pics sonores
     └── cv/         lignes, balle, rebond, homographie, confiance
 ```
 
@@ -172,8 +172,9 @@ Ce qui est en place en v0.3 :
 - La vidéo enregistre le son (`enableAudio`) si le micro est autorisé, demandé juste après la caméra. Refusé : vidéo muette, rien d'autre ne change.
 - iOS : Vosk forçait la session audio en « enregistrement seul » et la désactivait à l'arrêt, ce qui aurait coupé le son de la vidéo à chaque changement de jeu (Vosk redémarre pour changer de grammaire). Patch `patches/react-native-vosk+2.1.7.patch` (appliqué par `postinstall`) : Vosk rejoint la session lecture + enregistrement de la caméra et ne la désactive plus. Android : rien à changer, CameraX et Vosk lisent le micro en même temps (constaté au premier test, son et voix ensemble).
 - Le replay joue le son à ×1 seulement (étiré au ralenti, il n'aide pas), même téléphone en silencieux.
-- **Pics sonores** : calculés à l'ouverture du VAR, sur le point affiché seulement. Le module natif local `modules/audio-envelope` lit la piste audio du clip (AVAssetReader sur iOS, MediaExtractor + MediaCodec sur Android) et renvoie le volume (RMS) par tranches de 10 ms. `core/audio/peaks.ts` garde les maximums locaux 4 fois au-dessus du fond sonore du clip (la médiane), espacés d'au moins 80 ms. Seuils de départ, à régler sur un vrai court.
+- **Pics sonores** : calculés à l'ouverture du VAR, sur le point affiché seulement. Le module natif local `modules/sound-levels` lit la piste audio du clip (AVAssetReader sur iOS, MediaExtractor + MediaCodec sur Android) et renvoie le niveau sonore (RMS) par tranches de 10 ms. `core/sound/soundPeaks.ts` garde les maximums locaux 4 fois au-dessus du fond sonore du clip (la médiane), espacés d'au moins 80 ms. Seuils de départ, à régler sur un vrai court.
 - Une marque dit « bruit fort ici », jamais ce que c'était (frappe, rebond, cri, grillage). Les boutons « ◀ Son » / « Son ▶ » mettent en pause 0,15 s avant le pic, pour avancer image par image.
+- **À vérifier sur un vrai court** : (1) iOS lit le son ré-échantillonné à 16 kHz mono, Android à sa fréquence d'origine ; le 16 kHz coupe les aigus au-dessus de 8 kHz, là où est le « clac » d'une frappe : comparer les marques sur le même échange filmé par les deux téléphones. (2) Sur Android, le décodeur AAC ajoute quelques millisecondes de silence au début (priming, ~20 à 45 ms) que `MediaExtractor` ne retire pas : vérifier en image par image que la marque tombe sur l'impact, pas 1 à 3 images après.
 
 ## VAR
 

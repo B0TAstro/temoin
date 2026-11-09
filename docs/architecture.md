@@ -25,7 +25,7 @@ flowchart LR
       direction LR
       A_CAM["Caméra + son<br/>VisionCamera"]
       A_MIC["Voix<br/>Vosk FR"]
-      A_ENV["Volume du son<br/>module audio-envelope"]
+      A_ENV["Niveau sonore<br/>module sound-levels"]
       A_LINK["Liaison<br/>BLE (sans radio si refusé)"]
       A_CV["Pixels<br/>OpenCV <i>v0.5</i>"]
     end

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Video, { type VideoRef } from 'react-native-video';
 
 import { toUri } from '@/adapters/files';
-import { peakTarget } from '@/core/audio/peaks';
+import { stopBeforePeak } from '@/core/sound/soundPeaks';
 import type { Segment } from '@/core/clips/Segment';
 import { buildTimeline, locate } from '@/core/clips/timeline';
 import { colors, radius, touch } from '@/ui/theme';
@@ -74,7 +74,7 @@ export function ClipPlayer({
 
   /** Pauses just before the next (or previous) loud sound: a hit, a bounce, or anything else. */
   const jumpToPeak = (direction: 1 | -1) => {
-    const target = peakTarget(peaks, timeRef.current, direction, PEAK_LEAD_SECONDS);
+    const target = stopBeforePeak(peaks, timeRef.current, direction, PEAK_LEAD_SECONDS);
     if (target !== undefined) pauseAt(target);
   };
 

@@ -1,26 +1,27 @@
 import AVFoundation
 import ExpoModulesCore
 
-/// Decoded at a low rate, mono: enough to see a hit or a bounce, and cheap.
 private let sampleRate = 16_000
 
-public final class AudioEnvelopeModule: Module {
+public final class SoundLevelsModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("AudioEnvelope")
+    Name("SoundLevels")
 
     AsyncFunction("read") { (path: String, windowMs: Double) async throws -> [Double] in
-      let url = path.hasPrefix("file://") ? URL(string: path)! : URL(fileURLWithPath: path)
-      return try await readEnvelope(url: url, windowMs: windowMs)
+      let url =
+        path.hasPrefix("file://")
+        ? (URL(string: path) ?? URL(fileURLWithPath: String(path.dropFirst(7))))
+        : URL(fileURLWithPath: path)
+      return try await readSoundLevels(url: url, windowMs: windowMs)
     }
   }
 }
 
-private func readEnvelope(url: URL, windowMs: Double) async throws -> [Double] {
+private func readSoundLevels(url: URL, windowMs: Double) async throws -> [Double] {
   let asset = AVURLAsset(url: url)
   guard let track = try await asset.loadTracks(withMediaType: .audio).first else { return [] }
 
   let reader = try AVAssetReader(asset: asset)
-  // The reader converts the AAC track to plain float samples, resampled and mixed down to mono.
   let output = AVAssetReaderTrackOutput(
     track: track,
     outputSettings: [
@@ -36,7 +37,7 @@ private func readEnvelope(url: URL, windowMs: Double) async throws -> [Double] {
   guard reader.startReading() else { throw reader.error ?? CocoaError(.fileReadUnknown) }
 
   let window = max(1, Int(Double(sampleRate) * windowMs / 1000))
-  var envelope: [Double] = []
+  var levels: [Double] = []
   var sum = 0.0
   var count = 0
   while let buffer = output.copyNextSampleBuffer() {
@@ -51,12 +52,12 @@ private func readEnvelope(url: URL, windowMs: Double) async throws -> [Double] {
       sum += Double(sample * sample)
       count += 1
       if count == window {
-        envelope.append((sum / Double(count)).squareRoot())
+        levels.append((sum / Double(count)).squareRoot())
         sum = 0
         count = 0
       }
     }
   }
   if reader.status == .failed { throw reader.error ?? CocoaError(.fileReadUnknown) }
-  return envelope
+  return levels
 }

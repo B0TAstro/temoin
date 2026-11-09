@@ -1,5 +1,5 @@
 Pod::Spec.new do |s|
-  s.name           = 'AudioEnvelope'
+  s.name           = 'SoundLevels'
   s.version        = '0.1.0'
   s.summary        = 'Loudness envelope of a recorded clip, for the replay timeline.'
   s.description    = 'Decodes the sound track of a video file and returns its RMS per window.'
