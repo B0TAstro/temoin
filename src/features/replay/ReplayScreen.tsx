@@ -6,6 +6,7 @@ import Video, { type VideoRef } from 'react-native-video';
 import { toUri } from '@/adapters/files';
 import type { Segment } from '@/core/clips/Segment';
 import { buildTimeline, locate } from '@/core/clips/timeline';
+import type { ReplayOutcome } from '@/core/events/outcome';
 import type { SideId } from '@/core/score/types';
 import { colors, radius, touch } from '@/ui/theme';
 import { ZoomableView } from '@/ui/ZoomableView';
@@ -27,9 +28,6 @@ export type ReplayClip = {
   subtitle: string;
   segments: readonly Segment[];
 };
-
-/** What the players decided, looking at the replay. The app never decides. */
-export type ReplayOutcome = { kind: 'point'; winner: SideId } | { kind: 'replayed' };
 
 type Side = { id: SideId; name: string };
 
