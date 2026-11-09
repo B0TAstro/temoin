@@ -2,7 +2,7 @@ import type { EventSubscription } from 'react-native';
 import * as Vosk from 'react-native-vosk';
 
 /** Folder name inside the app bundle, placed there by the react-native-vosk config plugin. */
-const MODEL = 'model-fr-fr';
+const MODEL = 'vosk-model-small-fr-0.22';
 
 let modelLoaded: Promise<void> | null = null;
 

@@ -4,7 +4,7 @@
     "slug": "temoin",
     "version": "0.4.0",
     "orientation": "default",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/icon/icon.png",
     "scheme": "temoin",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#111111",
@@ -19,9 +19,9 @@
       "package": "com.tomboullay.temoin",
       "adaptiveIcon": {
         "backgroundColor": "#111111",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/icon/android-icon-foreground.png",
+        "backgroundImage": "./assets/icon/android-icon-background.png",
+        "monochromeImage": "./assets/icon/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
       "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"]
@@ -32,7 +32,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#111111",
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/icon/splash-icon.png",
           "imageWidth": 76
         }
       ],
@@ -50,7 +50,7 @@
       [
         "react-native-vosk",
         {
-          "models": ["assets/model-fr-fr"],
+          "models": ["models/vosk-model-small-fr-0.22"],
           "iOSMicrophonePermission": "Témoin enregistre le son avec la vidéo pour revoir un point contesté, et écoute l'annonce du score pour le mettre à jour. Le son reste sur ce téléphone et est supprimé en fin de match."
         }
       ],

@@ -12,7 +12,7 @@ expo-env.d.ts
 /android
 
 # Vosk model (downloaded by `npm run setup:model`)
-assets/model-fr-fr/
+models/
 
 # Recorded clips and test videos
 *.mov
