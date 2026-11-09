@@ -16,7 +16,7 @@ import {
 } from 'munim-bluetooth';
 import { Platform } from 'react-native';
 
-import { Decoder, encode } from '@/core/protocol/messages';
+import { Decoder, encode } from './ble/framing';
 
 /** Témoin's GATT service: one characteristic per direction. */
 const SERVICE = '6b1c0001-6f74-4e1d-9a0b-74656d6f696e';
