@@ -28,6 +28,10 @@ runs:
       shell: bash
       run: npm ci
 
+    - name: 🗣️ Download the Vosk model
+      shell: bash
+      run: npm run setup:model
+
     - name: 🏗️ Generate the Android project
       shell: bash
       run: npx expo prebuild --platform android --clean --no-install

@@ -24,7 +24,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["android.permission.CAMERA"]
+      "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"]
     },
     "plugins": [
       "expo-router",
@@ -46,7 +46,15 @@
           "bluetoothAlwaysUsageDescription": "Témoin relie les téléphones de la session en Bluetooth pour partager le score. Aucune vidéo n'est envoyée.",
           "multipeerServiceTypes": false
         }
-      ]
+      ],
+      [
+        "react-native-vosk",
+        {
+          "models": ["assets/model-fr-fr"],
+          "iOSMicrophonePermission": "Témoin écoute l'annonce du score pour le mettre à jour sans toucher au téléphone. Rien n'est enregistré ni envoyé."
+        }
+      ],
+      "expo-screen-orientation"
     ],
     "experiments": {
       "reactCompiler": true

@@ -8,6 +8,13 @@ import type { MatchConfig, MatchState, SideId } from '@/core/score/types';
 export type MatchEvent =
   /** A player says who won the point. The clip is cut here, as close as possible to the rally. */
   | { type: 'point-proposed'; winner: SideId }
+  /**
+   * The server called the new score out loud and the voice recognition understood it. The points
+   * count at once, the receiver's silence being their agreement. Usually one winner, two when the
+   * call shows a call was missed. `point` is the number of the first point it ends (0 for the
+   * first): every phone listens, and only the first call for a point counts.
+   */
+  | { type: 'point-called'; winners: SideId[]; point: number }
   /** The other side agrees: the point counts, for `winner` if the replay changed their minds. */
   | { type: 'point-confirmed'; winner?: SideId }
   /** The other side disagrees, or the players chose "point rejoué" in the replay. */
@@ -49,6 +56,9 @@ export function replay(setup: MatchSetup, log: readonly LoggedEvent[]): MatchVie
       case 'point-proposed':
         pending ??= event.winner;
         break;
+      case 'point-called':
+        points.push(...event.winners);
+        break;
       case 'point-confirmed':
         if (pending !== undefined) points.push(event.winner ?? pending);
         pending = undefined;
@@ -80,6 +90,13 @@ export function isValid(view: MatchView, event: MatchEvent): boolean {
   switch (event.type) {
     case 'point-proposed':
       return view.pending === undefined && view.state.matchWonBy === undefined;
+    case 'point-called':
+      // Another phone already called this point: a duplicate.
+      return (
+        view.pending === undefined &&
+        view.state.matchWonBy === undefined &&
+        event.point === view.points.length
+      );
     case 'point-confirmed':
     case 'point-rejected':
       return view.pending !== undefined;
