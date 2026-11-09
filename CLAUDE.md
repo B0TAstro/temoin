@@ -118,6 +118,7 @@ On garde le buffer vidéo du POC replay, mais **son unité est le point, pas la 
 - On garde **3 points** : le point en cours et les 2 précédents. Dès qu'un point sort de cette fenêtre, son fichier est supprimé.
 - VAR verrouille les clips concernés le temps du litige. L'enregistrement est **mis en pause** pendant le replay pour soulager le téléphone (chauffe, batterie), et reprend au retour au score.
 - Tout est supprimé en fin de match et au lancement de l'app (en cas de crash).
+- Une session est en **paysage** (les menus restent en portrait). Chaque téléphone choisit sa caméra : arrière (meilleure image) ou avant (les joueurs voient l'écran et le score). Pas de miroir : le replay montre le court tel qu'il est, sinon la caméra avant inverserait gauche et droite.
 
 ## Score
 
@@ -137,6 +138,14 @@ Avec plusieurs téléphones, **chacun fait tourner sa propre reconnaissance**. I
 4. L'hôte diffuse le score validé à tous, et chaque téléphone ferme son clip du point.
 
 Avec un seul téléphone, c'est le même chemin avec un seul candidat. Avec plusieurs, le téléphone le plus proche du serveur entend mieux, les autres servent de secours (vent, distance). La grammaire est dérivée de l'état du score, jamais écrite à la main. Point à vérifier en premier : caméra et reconnaissance vocale sur le même micro.
+
+Ce qui est en place en v0.3 :
+- Code du POC voix repris tel quel : `core/score/announce.ts` (formulations attendues), `core/voice/` (normalisation, lexique, similarité, `decide`, grammaire). Son `ScoreListener` n'est pas repris : le journal d'événements tient ce rôle.
+- Une annonce comprise devient l'événement `point-called { winners, afterSeq }` : le point compte tout de suite (silence du receveur = accord) et le clip est coupé. Pour contester : VAR ou « Annuler le point ».
+- Doublons : `afterSeq` est le dernier événement que le téléphone avait en entendant l'annonce. L'hôte ne l'accepte que si le journal n'a pas bougé depuis : la copie d'un autre téléphone, ou une copie en retard après « Annuler le point », est ignorée. Refusée aussi pendant le VAR. **Simplification** : la première annonce reçue gagne, pas encore de fenêtre « meilleure confiance » entre téléphones.
+- Resynchronisation du POC : un saut de 1 ou 2 points en avant (annonce manquée) est appliqué en un seul événement, sauf si deux ordres des points y mènent (0-0 → 15-15) : l'app ne devine pas qui a gagné le dernier point ; un saut en arrière est affiché, jamais appliqué (on corrige au tap).
+- L'écoute est coupée pendant le VAR (les joueurs discutent devant le replay) et quand la caméra est en pause. Bouton pour couper la voix.
+- La vidéo reste sans son : Vosk a le micro pour lui seul.
 
 ## VAR
 

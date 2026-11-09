@@ -29,9 +29,11 @@ import { Scoreboard } from '@/features/score/Scoreboard';
 import { buildJoinLink } from '@/features/session/joinLink';
 import { decodeForm, toSetup } from '@/features/session/setup';
 import { type Session, useGuestSession, useHostSession } from '@/features/session/useSession';
+import { type VoiceStatus, useVoice } from '@/features/voice/useVoice';
 import { Button } from '@/ui/Button';
+import { useOrientation } from '@/ui/orientation';
 import { QrCode } from '@/ui/QrCode';
-import { colors, radius } from '@/ui/theme';
+import { colors, radius, touch } from '@/ui/theme';
 
 const TARGET_FPS = 60;
 const TARGET_BIT_RATE = 10_000_000;
@@ -61,6 +63,7 @@ function toReplay({ finished, current }: ClipsForReplay): Omit<Replay, 'forSeq'>
 
 /** Host (created the session) or guest (scanned its QR code): same screen, same code. */
 export default function MatchRoute() {
+  useOrientation('landscape');
   const params = useLocalSearchParams<{ role?: string; s?: string; form?: string }>();
   if (params.role === 'guest' && params.s) return <GuestMatch sessionId={params.s} />;
   return <HostMatch sessionId={params.s ?? 'SOLO'} rawForm={params.form} />;
@@ -108,7 +111,17 @@ function linkLabel(session: Session): string {
   }
 }
 
-/** The match: the score read from a distance, the camera filming one file per point. */
+const VOICE_LABEL: Record<VoiceStatus, string> = {
+  off: 'Voix coupée',
+  starting: 'Chargement de la voix…',
+  listening: 'À l’écoute de l’annonce',
+  error: 'Voix indisponible',
+};
+
+/**
+ * The match, in landscape: the camera and the session on the left, the score in the middle, the
+ * match buttons on the right, under the thumb.
+ */
 function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
   const { view, dispatch, log } = session;
   const { state, pending, points } = view;
@@ -117,7 +130,9 @@ function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
 
   useKeepAwake(); // otherwise the screen locks and the OS stops the camera
   const { hasPermission, canRequestPermission, requestPermission } = useCameraPermission();
-  const device = useCameraDevice('back');
+  // Front: the players see the screen, and the score, from the court. Back: better picture.
+  const [facing, setFacing] = useState<'back' | 'front'>('back');
+  const device = useCameraDevice(facing);
   const appActive = useAppActive();
   const { fps, onFrameTimestamp, onFrameDropped } = useFpsMeter();
   const [selectedFps, setSelectedFps] = useState<number>();
@@ -125,6 +140,7 @@ function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
   const [tab, setTab] = useState<Tab>('score');
   const [replay, setReplay] = useState<Replay | null>(null);
   const [showQr, setShowQr] = useState(false);
+  const [voiceOn, setVoiceOn] = useState(true);
 
   useEffect(() => {
     if (!hasPermission && canRequestPermission) requestPermission();
@@ -152,13 +168,21 @@ function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
   const cameraActive = !view.varOpen && appActive && !matchOver;
   const { stats, clips } = useClipRecorder(videoOutput, cameraRunning && cameraActive);
 
-  // Every phone cuts its own file from the shared log, whoever pressed the button. A guest
-  // joining late skips what happened before it arrived.
+  // The voice listens while the camera films. Not during the replay: the players talking in front
+  // of it must not count a point.
+  const voice = useVoice({
+    state,
+    enabled: voiceOn && cameraRunning && cameraActive,
+    onPoints: (winners) => dispatch({ type: 'point-called', winners, afterSeq: view.seq }),
+  });
+
+  // Every phone cuts its own file from the shared log, whoever pressed the button or heard the
+  // call. A guest joining late skips what happened before it arrived.
   const processed = useRef(log.length);
   useEffect(() => {
     for (let i = processed.current; i < log.length; i++) {
       const event = log[i];
-      if (event?.type === 'point-proposed') {
+      if (event?.type === 'point-proposed' || event?.type === 'point-called') {
         const before = replayLog(setup, log.slice(0, i));
         clips.endPoint({ pointIndex: before.points.length, label: scoreLabel(before.state) });
       } else if (event?.type === 'point-rejected') {
@@ -238,25 +262,40 @@ function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
   if (device == null) {
     return (
       <View style={styles.center}>
-        <Text style={styles.message}>Aucune caméra arrière.</Text>
+        <Text style={styles.message}>
+          {facing === 'front' ? 'Aucune caméra avant.' : 'Aucune caméra arrière.'}
+        </Text>
+        <Button
+          label="Changer de caméra"
+          variant="outline"
+          onPress={() => setFacing(facing === 'back' ? 'front' : 'back')}
+        />
       </View>
     );
   }
 
   const canPropose = pending === undefined && !matchOver;
   const opening = view.varOpen && !shownReplay;
+  const heardLine =
+    voice.partial.length > 0
+      ? `« ${voice.partial} »`
+      : voice.heard
+        ? `« ${voice.heard.text} » · ${voice.heard.result}`
+        : null;
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-        <View style={styles.header}>
-          <View style={[styles.preview, tab === 'training' && styles.previewLarge]}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
+        <View style={styles.side}>
+          <View style={styles.preview}>
             <Camera
               style={StyleSheet.absoluteFill}
               device={device}
               isActive={cameraActive}
               outputs={[videoOutput, frameOutput]}
               constraints={[{ fps: TARGET_FPS }, { resolutionBias: videoOutput }]}
+              // The replay shows the court as it is: a mirrored clip would swap the lines.
+              mirrorMode="off"
               onStarted={() => setCameraRunning(true)}
               onStopped={() => setCameraRunning(false)}
               onSessionConfigSelected={(config: CameraSessionConfig) =>
@@ -265,127 +304,140 @@ function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
               resizeMode="cover"
             />
           </View>
-          <View style={styles.status}>
-            <Text style={[styles.rec, !stats.recording && styles.recOff]}>
-              {stats.recording ? '● REC' : matchOver ? 'Match terminé' : 'Caméra en pause'}
-            </Text>
-            <Text style={styles.statusText}>{linkLabel(session)}</Text>
-            <View style={styles.links}>
-              {session.role === 'host' && (
-                <Pressable onPress={() => setShowQr(true)} hitSlop={12}>
-                  <Text style={styles.link}>Inviter un téléphone</Text>
-                </Pressable>
-              )}
-              <Pressable onPress={leave} hitSlop={12}>
-                <Text style={styles.link}>Quitter</Text>
-              </Pressable>
-            </View>
+          <Text style={[styles.rec, !stats.recording && styles.recOff]}>
+            {stats.recording ? '● REC' : matchOver ? 'Match terminé' : 'Caméra en pause'}
+          </Text>
+          <Text style={styles.statusText}>{linkLabel(session)}</Text>
+          <Text style={[styles.statusText, voice.status === 'listening' && styles.listening]}>
+            {VOICE_LABEL[voice.status]}
+          </Text>
+          <View style={styles.tools}>
+            {session.role === 'host' && (
+              <IconButton
+                icon="qr-code"
+                label="Inviter un téléphone"
+                onPress={() => setShowQr(true)}
+              />
+            )}
+            <IconButton
+              icon="camera-reverse"
+              label={facing === 'back' ? 'Passer à la caméra avant' : 'Passer à la caméra arrière'}
+              onPress={() => setFacing(facing === 'back' ? 'front' : 'back')}
+            />
+            <IconButton
+              icon={voiceOn ? 'mic' : 'mic-off'}
+              label={voiceOn ? 'Couper la voix' : 'Activer la voix'}
+              onPress={() => setVoiceOn(!voiceOn)}
+            />
+            <IconButton icon="exit-outline" label="Quitter le match" onPress={leave} />
+          </View>
+          <View style={styles.tabs}>
+            <TabButton
+              label="Score"
+              icon="tennisball"
+              active={tab === 'score'}
+              onPress={() => setTab('score')}
+            />
+            <TabButton
+              label="Entraînement"
+              icon="barbell"
+              active={tab === 'training'}
+              onPress={() => setTab('training')}
+            />
           </View>
         </View>
 
-        {tab === 'score' ? (
-          <View style={styles.body}>
+        <View style={styles.middle}>
+          {tab === 'score' ? (
             <View style={styles.board}>
               <ScoreDisplay state={state} />
+              {heardLine !== null && (
+                <Text style={styles.heard} numberOfLines={1}>
+                  {heardLine}
+                </Text>
+              )}
             </View>
-            {pending !== undefined ? (
-              <PendingBanner
-                winnerName={name(pending)}
-                onConfirm={() => dispatch({ type: 'point-confirmed' })}
-                onReject={() => dispatch({ type: 'point-rejected' })}
-              />
-            ) : (
-              <View style={styles.row}>
-                {[a, b].map((side) => (
-                  <Button
-                    key={side.id}
-                    label={`+1 ${name(side.id)}`}
-                    onPress={() => dispatch({ type: 'point-proposed', winner: side.id })}
-                    disabled={!canPropose}
-                    style={styles.flex}
-                  />
-                ))}
+          ) : (
+            <ScrollView contentContainerStyle={styles.training}>
+              <Scoreboard state={state} />
+              <View style={styles.stats}>
+                <Text style={styles.statsText}>
+                  {fps.toFixed(0)} fps mesurés · {selectedFps ?? '—'} configurés
+                </Text>
+                <Text style={styles.statsText}>
+                  {stats.savedCount + 1} points gardés · {stats.totalMB.toFixed(0)} Mo ·{' '}
+                  {stats.deletedCount} fichiers supprimés · {stats.errorCount} erreurs
+                </Text>
+                <Text style={styles.statsText}>
+                  Session {session.sessionId} · {log.length} événements
+                </Text>
+                {voice.error !== undefined && (
+                  <Text style={styles.statsText}>Voix : {voice.error}</Text>
+                )}
               </View>
-            )}
-            <View style={styles.row}>
+            </ScrollView>
+          )}
+        </View>
+
+        <View style={styles.side}>
+          {pending !== undefined ? (
+            <PendingBanner
+              winnerName={name(pending)}
+              onConfirm={() => dispatch({ type: 'point-confirmed' })}
+              onReject={() => dispatch({ type: 'point-rejected' })}
+            />
+          ) : tab === 'score' ? (
+            [a, b].map((side) => (
               <Button
-                label={opening ? '…' : 'VAR'}
-                variant="var"
-                onPress={() => dispatch({ type: 'var-opened' })}
-                disabled={view.varOpen}
-                style={styles.flex}
+                key={side.id}
+                label={`+1 ${name(side.id)}`}
+                onPress={() => dispatch({ type: 'point-proposed', winner: side.id })}
+                disabled={!canPropose}
+                style={styles.action}
               />
-              <Button
-                label="Annuler le point"
-                variant="outline"
-                onPress={undo}
-                disabled={pending !== undefined || points.length === 0}
-                style={styles.flex}
-              />
-            </View>
-          </View>
-        ) : (
-          <ScrollView contentContainerStyle={styles.training}>
-            <Scoreboard state={state} />
-            <Text style={styles.sectionTitle}>Point gagné par</Text>
-            <View style={styles.row}>
+            ))
+          ) : (
+            <>
               <Button
                 label="Serveur"
                 onPress={() => award(state.server)}
                 disabled={!canPropose}
-                style={styles.flex}
+                style={styles.action}
               />
               <Button
                 label="Relanceur"
                 onPress={() => award(state.server === a.id ? b.id : a.id)}
                 disabled={!canPropose}
-                style={styles.flex}
+                style={styles.action}
               />
-            </View>
-            <Button
-              label="Annuler le dernier point"
-              variant="outline"
-              onPress={undo}
-              disabled={pending !== undefined || points.length === 0}
-            />
-            <View style={styles.stats}>
-              <Text style={styles.statsText}>
-                {fps.toFixed(0)} fps mesurés · {selectedFps ?? '—'} configurés
-              </Text>
-              <Text style={styles.statsText}>
-                {stats.savedCount + 1} points gardés · {stats.totalMB.toFixed(0)} Mo ·{' '}
-                {stats.deletedCount} fichiers supprimés · {stats.errorCount} erreurs
-              </Text>
-              <Text style={styles.statsText}>
-                Session {session.sessionId} · {log.length} événements
-              </Text>
-            </View>
-          </ScrollView>
-        )}
-      </SafeAreaView>
-
-      <SafeAreaView edges={['bottom']} style={styles.tabBar}>
-        <TabButton
-          label="Score"
-          icon="tennisball"
-          active={tab === 'score'}
-          onPress={() => setTab('score')}
-        />
-        <TabButton
-          label="Entraînement"
-          icon="barbell"
-          active={tab === 'training'}
-          onPress={() => setTab('training')}
-        />
+            </>
+          )}
+          <Button
+            label={opening ? '…' : 'VAR'}
+            variant="var"
+            onPress={() => dispatch({ type: 'var-opened' })}
+            disabled={view.varOpen}
+            style={styles.action}
+          />
+          <Button
+            label="Annuler le point"
+            variant="outline"
+            onPress={undo}
+            disabled={pending !== undefined || points.length === 0}
+            style={styles.action}
+          />
+        </View>
       </SafeAreaView>
 
       {showQr && (
         <View style={styles.qrOverlay}>
-          <Text style={styles.qrTitle}>Scannez pour rejoindre</Text>
-          <QrCode value={buildJoinLink(session.sessionId)} size={260} />
-          <Text style={styles.qrCode}>Session {session.sessionId}</Text>
-          <Text style={styles.hint}>Sur l’autre téléphone : Témoin › Rejoindre une session</Text>
-          <Button label="Fermer" variant="outline" onPress={() => setShowQr(false)} />
+          <QrCode value={buildJoinLink(session.sessionId)} size={240} />
+          <View style={styles.qrText}>
+            <Text style={styles.qrTitle}>Scannez pour rejoindre</Text>
+            <Text style={styles.qrCode}>Session {session.sessionId}</Text>
+            <Text style={styles.hint}>Sur l’autre téléphone : Témoin › Rejoindre une session</Text>
+            <Button label="Fermer" variant="outline" onPress={() => setShowQr(false)} />
+          </View>
         </View>
       )}
 
@@ -403,6 +455,29 @@ function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
         />
       )}
     </View>
+  );
+}
+
+/** A session setting, out of the way of the match buttons. */
+function IconButton({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: 'qr-code' | 'camera-reverse' | 'mic' | 'mic-off' | 'exit-outline';
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={8}
+      style={({ pressed }) => [styles.tool, pressed && styles.toolPressed]}
+    >
+      <Ionicons name={icon} size={24} color={colors.line} />
+    </Pressable>
   );
 }
 
@@ -425,7 +500,7 @@ function TabButton({
       accessibilityState={{ selected: active }}
       style={styles.tab}
     >
-      <Ionicons name={active ? icon : `${icon}-outline`} size={28} color={color} />
+      <Ionicons name={active ? icon : `${icon}-outline`} size={24} color={color} />
       <Text style={[styles.tabLabel, { color }]}>{label}</Text>
     </Pressable>
   );
@@ -433,7 +508,7 @@ function TabButton({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.ink },
-  safe: { flex: 1, paddingHorizontal: 16, gap: 16 },
+  safe: { flex: 1, flexDirection: 'row', padding: 12, gap: 16 },
   center: {
     flex: 1,
     alignItems: 'center',
@@ -444,38 +519,38 @@ const styles = StyleSheet.create({
   },
   message: { color: colors.line, fontSize: 22, textAlign: 'center' },
   hint: { color: colors.lineDim, fontSize: 18, textAlign: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingTop: 8 },
+  side: { width: 220, gap: 10, justifyContent: 'center' },
   preview: {
-    width: 90,
-    height: 120,
+    width: 220,
+    aspectRatio: 16 / 9,
     borderRadius: radius,
     overflow: 'hidden',
     backgroundColor: colors.inkSoft,
   },
-  previewLarge: { width: 160, height: 220 },
-  status: { flex: 1, gap: 8 },
   rec: { color: colors.ball, fontSize: 18, fontWeight: '800' },
   recOff: { color: colors.lineDim },
-  statusText: { color: colors.line, fontSize: 16 },
-  links: { flexDirection: 'row', gap: 24 },
-  link: { color: colors.lineDim, fontSize: 16, textDecorationLine: 'underline' },
-  body: { flex: 1, gap: 16, paddingBottom: 16 },
-  board: { flex: 1, justifyContent: 'center' },
-  row: { flexDirection: 'row', gap: 16 },
-  flex: { flex: 1 },
-  training: { gap: 16, paddingBottom: 24 },
-  sectionTitle: { color: colors.lineDim, fontSize: 16 },
-  stats: { backgroundColor: colors.inkSoft, borderRadius: radius, padding: 16, gap: 6 },
-  statsText: { color: colors.line, fontSize: 16, fontVariant: ['tabular-nums'] },
-  tabBar: {
-    flexDirection: 'row',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.2)',
+  statusText: { color: colors.line, fontSize: 15 },
+  listening: { color: colors.ball },
+  tools: { flexDirection: 'row', justifyContent: 'space-between' },
+  tool: {
+    width: 48,
+    height: 48,
+    borderRadius: radius,
     backgroundColor: colors.inkSoft,
-    paddingTop: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  tab: { flex: 1, alignItems: 'center', gap: 2, paddingBottom: 4 },
-  tabLabel: { fontSize: 16, fontWeight: '600' },
+  toolPressed: { opacity: 0.5 },
+  tabs: { flexDirection: 'row' },
+  tab: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 4 },
+  tabLabel: { fontSize: 14, fontWeight: '600' },
+  middle: { flex: 1 },
+  board: { flex: 1, justifyContent: 'center', gap: 12 },
+  heard: { color: colors.lineDim, fontSize: 18, textAlign: 'center' },
+  action: { minHeight: touch },
+  training: { gap: 16, paddingVertical: 8 },
+  stats: { backgroundColor: colors.inkSoft, borderRadius: radius, padding: 16, gap: 6 },
+  statsText: { color: colors.line, fontSize: 15, fontVariant: ['tabular-nums'] },
   qrOverlay: {
     position: 'absolute',
     top: 0,
@@ -483,11 +558,13 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(17,17,17,0.95)',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 20,
+    gap: 32,
     padding: 24,
   },
+  qrText: { gap: 16, maxWidth: 320 },
   qrTitle: { color: colors.line, fontSize: 28, fontWeight: '800' },
   qrCode: { color: colors.ball, fontSize: 28, fontWeight: '800', letterSpacing: 4 },
 });

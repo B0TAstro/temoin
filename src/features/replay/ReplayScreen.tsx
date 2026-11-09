@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video, { type VideoRef } from 'react-native-video';
 
@@ -100,7 +100,7 @@ function OutcomeBar({
     return (
       <View style={styles.confirm}>
         <Text style={styles.confirmText}>{label} : l’autre camp est d’accord ?</Text>
-        <View style={styles.row}>
+        <View style={styles.outcomes}>
           <BarButton label="Valider" primary onPress={() => onOutcome(chosen)} />
           <BarButton label="Changer" onPress={() => setChosen(undefined)} />
         </View>
@@ -109,7 +109,7 @@ function OutcomeBar({
   }
 
   return (
-    <View style={styles.row}>
+    <View style={styles.outcomes}>
       {sides.map((side) => (
         <BarButton
           key={side.id}
@@ -210,47 +210,49 @@ function ClipPlayer({ segments, fps, header, footer, onClose }: PlayerProps) {
 
   return (
     <View style={styles.container}>
-      <ZoomableView>
-        {timeline.segments.map((segment, index) => (
-          <Video
-            key={segment.path}
-            ref={(ref) => {
-              videoRefs.current[index] = ref;
-            }}
-            source={{ uri: toUri(segment.path) }}
-            style={[StyleSheet.absoluteFill, index !== activeIndex && styles.hidden]}
-            resizeMode="contain"
-            paused={!playing || index !== activeIndex}
-            rate={rate}
-            muted
-            repeat={false}
-            progressUpdateInterval={33}
-            onLoad={() => {
-              if (index !== initial.index) return;
-              // Already on the right frame: no seek, so no onSeek event to wait for.
-              if (initial.localS < 1 / fps) onInitialSeekDone();
-              else videoRefs.current[index]?.seek(initial.localS, 0);
-            }}
-            onSeek={() => {
-              if (index === initial.index) onInitialSeekDone();
-            }}
-            onProgress={(e) => {
-              if (index === activeIndex && playing) setTime(segment.offsetS + e.currentTime);
-            }}
-            onEnd={() => onSegmentEnd(index)}
-          />
-        ))}
-      </ZoomableView>
+      <View style={styles.stage}>
+        <ZoomableView>
+          {timeline.segments.map((segment, index) => (
+            <Video
+              key={segment.path}
+              ref={(ref) => {
+                videoRefs.current[index] = ref;
+              }}
+              source={{ uri: toUri(segment.path) }}
+              style={[StyleSheet.absoluteFill, index !== activeIndex && styles.hidden]}
+              resizeMode="contain"
+              paused={!playing || index !== activeIndex}
+              rate={rate}
+              muted
+              repeat={false}
+              progressUpdateInterval={33}
+              onLoad={() => {
+                if (index !== initial.index) return;
+                // Already on the right frame: no seek, so no onSeek event to wait for.
+                if (initial.localS < 1 / fps) onInitialSeekDone();
+                else videoRefs.current[index]?.seek(initial.localS, 0);
+              }}
+              onSeek={() => {
+                if (index === initial.index) onInitialSeekDone();
+              }}
+              onProgress={(e) => {
+                if (index === activeIndex && playing) setTime(segment.offsetS + e.currentTime);
+              }}
+              onEnd={() => onSegmentEnd(index)}
+            />
+          ))}
+        </ZoomableView>
 
-      <SafeAreaView style={styles.overlay} pointerEvents="box-none">
-        <View style={styles.topBar} pointerEvents="box-none">
+        <SafeAreaView style={styles.topBar} edges={['top', 'left']} pointerEvents="box-none">
           <Pressable style={styles.close} onPress={onClose}>
             <Text style={styles.closeText}>← Retour au score</Text>
           </Pressable>
           <View style={styles.badge}>{header}</View>
-        </View>
+        </SafeAreaView>
+      </View>
 
-        <View style={styles.bottomBar}>
+      <SafeAreaView style={styles.panel} edges={['top', 'bottom', 'right']}>
+        <ScrollView contentContainerStyle={styles.panelContent}>
           <Text style={styles.time}>
             {(timeS - timeline.totalS).toFixed(2)} s · x{rate}
           </Text>
@@ -266,9 +268,9 @@ function ClipPlayer({ segments, fps, header, footer, onClose }: PlayerProps) {
           </Pressable>
 
           <View style={styles.row}>
-            <ControlButton label="◀◀ image" onPress={() => stepFrame(-1)} />
+            <ControlButton label="◀◀" onPress={() => stepFrame(-1)} />
             <ControlButton label={playing ? '❚❚' : '▶'} onPress={togglePlay} />
-            <ControlButton label="image ▶▶" onPress={() => stepFrame(1)} />
+            <ControlButton label="▶▶" onPress={() => stepFrame(1)} />
           </View>
           <View style={styles.row}>
             {RATES.map((r) => (
@@ -281,7 +283,7 @@ function ClipPlayer({ segments, fps, header, footer, onClose }: PlayerProps) {
             ))}
           </View>
           {footer}
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </View>
   );
@@ -367,18 +369,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    flexDirection: 'row',
     backgroundColor: '#000',
   },
+  stage: { flex: 1 },
   hidden: { opacity: 0 },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'space-between',
-  },
-  topBar: { padding: 16, gap: 12 },
+  topBar: { position: 'absolute', top: 0, left: 0, maxWidth: 420, padding: 16, gap: 12 },
   badge: { backgroundColor: 'rgba(17,17,17,0.75)', padding: 12, borderRadius: radius },
   close: {
     alignSelf: 'flex-start',
@@ -391,7 +387,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(17,17,17,0.75)',
   },
   closeText: { color: colors.line, fontSize: 18, fontWeight: '700' },
-  bottomBar: { padding: 16, backgroundColor: 'rgba(17,17,17,0.85)', gap: 12 },
+  panel: { width: 300, backgroundColor: colors.ink },
+  panelContent: { padding: 16, gap: 12 },
   time: {
     color: colors.line,
     fontSize: 18,
@@ -407,9 +404,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   trackFill: { height: '100%', backgroundColor: colors.ball },
-  row: { flexDirection: 'row', justifyContent: 'center', gap: 16 },
+  row: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
+  outcomes: { gap: 8 },
   button: {
-    minWidth: 88,
+    flex: 1,
     minHeight: touch,
     paddingHorizontal: 14,
     borderRadius: radius,
@@ -421,7 +419,6 @@ const styles = StyleSheet.create({
   buttonText: { color: colors.line, fontSize: 18, fontWeight: '700' },
   buttonTextOn: { color: colors.ink },
   outcome: {
-    flex: 1,
     minHeight: touch,
     borderRadius: radius,
     borderWidth: 2,

@@ -20,7 +20,10 @@ export function ScoreDisplay({ state }: { state: MatchState }) {
               {state.server === side.id && <View style={styles.ball} />}
               <Text style={styles.role}>{roleLabel(state, side.id)}</Text>
             </View>
-            <Text style={styles.point}>{pointText(state, side.id)}</Text>
+            {/* The landscape column is narrow on small phones: a two-digit score shrinks to fit. */}
+            <Text style={styles.point} numberOfLines={1} adjustsFontSizeToFit>
+              {pointText(state, side.id)}
+            </Text>
           </View>
         ))}
       </View>

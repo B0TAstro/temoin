@@ -19,8 +19,8 @@ Between professional systems (around $100,000 per court) and stats-oriented amat
 ## How it works
 
 1. **Create a session** on one phone. Other phones can join by scanning a QR code, now or later in the match.
-2. **Place the phones** behind the baselines (one is enough, each extra phone adds an angle). The app detects the court lines.
-3. **Play.** Each phone films point by point and keeps only the current and previous points. The score is updated by a tap, or by voice when the server calls it out.
+2. **Place the phones** behind the baselines, in landscape (one is enough, each extra phone adds an angle). Use the back camera for the best picture, or the front camera so the players can read the score on the screen. The app detects the court lines.
+3. **Play.** Each phone films point by point and keeps the current point and the two previous ones. The score is updated when the server calls it out ("trente quinze"), with no one touching the phone, or by a tap.
 4. **Disagree? Press VAR.** Every phone opens the replay of the same point from its own angle. The players decide and enter the outcome: point for one side, point for the other, or point replayed, confirmed by both sides. If they still disagree, they close the replay and the score stays as it was: the app shows what happened, it does not settle a lasting dispute.
 5. **End of match.** All videos are deleted.
 
@@ -37,10 +37,10 @@ Each version adds a building block without breaking the previous one. Each versi
 | Version | What it does | What it validates | Status |
 |---|---|---|---|
 | **v0.0** · Foundation | The app launches on iPhone and Android, architecture and tooling in place | Build and tooling work on both platforms | Done |
-| **v0.0.1** · CI | Format, lint, typecheck, tests and quality checks on every pull request, installable build on demand to test a pull request on a phone | Done |
-| **v0.1** · Solo replay | One phone records point by point, VAR replay in slow motion and frame by frame with zoom, score by tap | Seeing the same picture is enough to settle a dispute | In progress |
-| **v0.2** · Multi-phone session | Host and guests over Bluetooth, join by QR code, shared score, VAR opens on every phone | The shared score holds, iPhone and Android together | Planned |
-| **v0.3** · Voice | The app recognises the server's call, updates the score and cuts the clip, with no one touching the phone | The phone can disappear during the rally | Planned |
+| **v0.0.1** · CI | Format, lint, typecheck, tests and quality checks on every pull request, installable build on demand to test a pull request on a phone | No regression reaches the main branch, a pull request can be tested on a real phone | Done |
+| **v0.1** · Solo replay | One phone records point by point, VAR replay in slow motion and frame by frame with zoom, score by tap | Seeing the same picture is enough to settle a dispute | Done |
+| **v0.2** · Multi-phone session | Host and guests over Bluetooth, join by QR code, shared score, VAR opens on every phone | The shared score holds, iPhone and Android together | Done |
+| **v0.3** · Voice | The app recognises the server's call, updates the score and cuts the clip, with no one touching the phone | The phone can disappear during the rally | In progress |
 | **v0.4** · Sound | Sound recorded with the video, hits and bounces marked on the replay timeline | Sound helps read the replay | Planned |
 | **v0.5** · Ball tracking | Ball followed in the replay, trajectory drawn | The ball can be tracked without a vision model | Planned |
 | **v0.6** · Wi-Fi fallback | Automatic switch between Bluetooth and local Wi-Fi | No event is lost when Bluetooth drops | Planned |
