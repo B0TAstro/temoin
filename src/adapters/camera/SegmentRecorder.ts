@@ -2,6 +2,7 @@ import { Directory, File } from 'expo-file-system';
 import { Platform } from 'react-native';
 import type { CameraVideoOutput, Recorder } from 'react-native-vision-camera';
 
+import { deleteFile, fileSize, toUri } from '@/adapters/files';
 import type { Segment } from '@/core/clips/Segment';
 
 /**
@@ -29,25 +30,6 @@ type ActiveSegment = {
   /** Resolves once the file is fully written (or recording failed). */
   finished: Promise<void>;
 };
-
-const toUri = (path: string) => (path.startsWith('file://') ? path : `file://${path}`);
-
-export function deleteFile(path: string) {
-  try {
-    const file = new File(toUri(path));
-    if (file.exists) file.delete();
-  } catch (e) {
-    console.warn(`Could not delete ${path}`, e);
-  }
-}
-
-function fileSize(path: string): number {
-  try {
-    return new File(toUri(path)).size ?? 0;
-  } catch {
-    return 0;
-  }
-}
 
 /** Deletes videos left in the recording folder by a previous session (crash, app killed). */
 function purgeStaleRecordings(currentPath: string) {

@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video, { type VideoRef } from 'react-native-video';
 
+import { toUri } from '@/adapters/files';
 import type { Segment } from '@/core/clips/Segment';
 import { buildTimeline, locate } from '@/core/clips/timeline';
 import type { SideId } from '@/core/score/types';
@@ -43,8 +44,6 @@ type Props = {
   /** Back to the score without changing anything. */
   onClose: () => void;
 };
-
-const toUri = (path: string) => (path.startsWith('file://') ? path : `file://${path}`);
 
 /** VAR: one point at a time, with "◀ / ▶" to move between the 3 points kept on the phone. */
 export function ReplayScreen({ clips, initialIndex, fps, sides, onOutcome, onClose }: Props) {

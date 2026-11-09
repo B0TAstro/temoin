@@ -1,6 +1,7 @@
 import type { CameraVideoOutput } from 'react-native-vision-camera';
 
-import { deleteFile, MAX_POINT_SECONDS, SegmentRecorder } from '@/adapters/camera/SegmentRecorder';
+import { MAX_POINT_SECONDS, SegmentRecorder } from '@/adapters/camera/SegmentRecorder';
+import { deleteFile } from '@/adapters/files';
 import { type Clip, ClipQueue, type PointSnapshot } from '@/core/clips/ClipQueue';
 import type { Segment } from '@/core/clips/Segment';
 
