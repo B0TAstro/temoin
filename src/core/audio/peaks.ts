@@ -37,3 +37,20 @@ export function findPeaks(envelope: readonly number[], windowMs = ENVELOPE_WINDO
   });
   return peaks.map((peak) => peak.i * windowS);
 }
+
+/**
+ * Where "◀ Son" / "Son ▶" lands from `nowS`: `leadS` before the previous or next peak, to see the
+ * ball come in frame by frame. Undefined when there is no peak that way.
+ */
+export function peakTarget(
+  peaks: readonly number[],
+  nowS: number,
+  direction: 1 | -1,
+  leadS: number,
+): number | undefined {
+  const targets = peaks.map((t) => Math.max(0, t - leadS));
+  // A small margin, so a second press moves on instead of landing on the same peak.
+  return direction === 1
+    ? targets.find((t) => t > nowS + 0.01)
+    : targets.findLast((t) => t < nowS - 0.01);
+}
