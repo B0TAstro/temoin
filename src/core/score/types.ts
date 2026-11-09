@@ -39,8 +39,11 @@ export interface MatchState {
   points: Record<SideId, Point>;
   games: Record<SideId, number>;
   sets: Record<SideId, number>;
-  /** Games played since the start of the match, all sets together: decides the changes of ends. */
-  gamesPlayed: number;
+  /**
+   * Whether the players stand on the opposite ends from where they started. Flips after every odd
+   * game of a set (the tie-break counting as one game) and every six points of a tie-break.
+   */
+  endsSwapped: boolean;
   /** Present only while a tie-break is being played. */
   tieBreak?: TieBreak;
   /** Set once a side takes the match. Nothing moves after that. */

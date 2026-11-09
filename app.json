@@ -36,7 +36,8 @@
           "imageWidth": 76
         }
       ],
-      "react-native-video"
+      "react-native-video",
+      "expo-font"
     ],
     "experiments": {
       "reactCompiler": true

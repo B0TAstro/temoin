@@ -36,9 +36,9 @@ Each version adds a building block without breaking the previous one. Each versi
 
 | Version | What it does | What it validates | Status |
 |---|---|---|---|
-| **v0.0** · Foundation | The app launches on iPhone and Android, architecture and tooling in place | Build and tooling work on both platforms | In progress |
-| **v0.0.1** · CI | Format, lint, typecheck, tests and quality checks on every pull request, installable build on demand to test a pull request on a phone | Nothing regresses on `main` | Planned |
-| **v0.1** · Solo replay | One phone records point by point, VAR replay in slow motion and frame by frame with zoom, score by tap | Seeing the same picture is enough to settle a dispute | Planned |
+| **v0.0** · Foundation | The app launches on iPhone and Android, architecture and tooling in place | Build and tooling work on both platforms | Done |
+| **v0.0.1** · CI | Format, lint, typecheck, tests and quality checks on every pull request, installable build on demand to test a pull request on a phone | Done |
+| **v0.1** · Solo replay | One phone records point by point, VAR replay in slow motion and frame by frame with zoom, score by tap | Seeing the same picture is enough to settle a dispute | In progress |
 | **v0.2** · Multi-phone session | Host and guests over Bluetooth, join by QR code, shared score, VAR opens on every phone | The shared score holds, iPhone and Android together | Planned |
 | **v0.3** · Voice | The app recognises the server's call, updates the score and cuts the clip, with no one touching the phone | The phone can disappear during the rally | Planned |
 | **v0.4** · Sound | Sound recorded with the video, hits and bounces marked on the replay timeline | Sound helps read the replay | Planned |

@@ -17,8 +17,8 @@ const MAX_DURATION_MARGIN_SECONDS = 0.5;
  * two points. On iOS the persistent recorder accepts several recorders, so the files overlap.
  */
 const CAN_OVERLAP = Platform.OS === 'ios';
-/** Upper bound for finalizing the files in progress. */
-const FINALIZE_TIMEOUT_MS = 2000;
+/** Upper bound for finalizing the files in progress: past it, the stuck recorder is cancelled. */
+const FINALIZE_TIMEOUT_MS = 5000;
 
 type ActiveSegment = {
   startedAt?: number;
@@ -73,8 +73,15 @@ export class SegmentRecorder {
   private running = false;
   private purged = false;
   private timer: ReturnType<typeof setTimeout> | undefined;
+  /** The cut in progress: a second request (double tap, safety limit) joins it. */
+  private cutting: Promise<number> | undefined;
+  /** When the last file finished, to measure the gap at the next start (Android). */
+  private lastEndedAt: number | undefined;
   errorCount = 0;
-  /** Overlap between the last two consecutive files, in ms (negative: a gap, frames were lost). */
+  /**
+   * Overlap between the last two consecutive files, in ms (negative: a gap). Approximate: it uses
+   * the JS clock of the callbacks, not the timestamps of the frames.
+   */
   lastOverlapMs: number | undefined;
 
   constructor(
@@ -106,8 +113,13 @@ export class SegmentRecorder {
    * Cuts now, at the end of a point. Returns the instant of the cut (the start of the new file):
    * everything recorded before belongs to the previous point.
    */
-  async cut(): Promise<number> {
-    if (!this.running) return Date.now();
+  cut(): Promise<number> {
+    if (!this.running) return Promise.resolve(Date.now());
+    this.cutting ??= this.doCut().finally(() => (this.cutting = undefined));
+    return this.cutting;
+  }
+
+  private async doCut(): Promise<number> {
     const previous = [...this.active.entries()];
     clearTimeout(this.timer);
     if (CAN_OVERLAP) {
@@ -134,8 +146,22 @@ export class SegmentRecorder {
       if (recorder.isRecording) await recorder.stopRecording().catch(() => {});
       await segment.finished;
     });
-    const timeout = new Promise<void>((resolve) => setTimeout(resolve, FINALIZE_TIMEOUT_MS));
+    let timedOut = false;
+    const timeout = new Promise<void>((resolve) =>
+      setTimeout(() => {
+        timedOut = true;
+        resolve();
+      }, FINALIZE_TIMEOUT_MS),
+    );
     await Promise.race([Promise.all(pending), timeout]);
+    if (!timedOut) return;
+    // A recorder that never finished would block the next one on Android: give up on its file.
+    for (const [recorder] of entries) {
+      if (!this.active.has(recorder)) continue;
+      this.errorCount += 1;
+      this.active.delete(recorder);
+      await recorder.cancelRecording().catch(() => {});
+    }
   }
 
   /** Starts one file. Resolves with its start time, or undefined if it could not start. */
@@ -174,6 +200,7 @@ export class SegmentRecorder {
         deleteFile(path); // cancelled while finishing
       } else {
         const endedAt = Date.now();
+        this.lastEndedAt = endedAt;
         if (segment.nextStartedAt != null) this.lastOverlapMs = endedAt - segment.nextStartedAt;
         this.onSegment({
           path,
@@ -196,6 +223,9 @@ export class SegmentRecorder {
       await recorder.startRecording(onFinished, onError);
       segment.startedAt = Date.now();
       if (this.last) this.last.nextStartedAt = segment.startedAt;
+      // Android: the previous file already finished, so the gap is known now.
+      if (!CAN_OVERLAP && this.last && this.lastEndedAt != null)
+        this.lastOverlapMs = this.lastEndedAt - segment.startedAt;
       this.last = segment;
       return segment.startedAt;
     } catch (e) {

@@ -116,7 +116,12 @@ export default function RecorderSpike() {
 
   useEffect(() => {
     if (!recording) return;
-    const tick = setInterval(() => setNow(Date.now()), 1000);
+    const tick = setInterval(() => {
+      setNow(Date.now());
+      // Errors can happen without any file finishing (recorder that fails to start).
+      const errors = recorder.current?.errorCount ?? 0;
+      setStats((previous) => (previous.errors === errors ? previous : { ...previous, errors }));
+    }, 1000);
     return () => clearInterval(tick);
   }, [recording]);
 
@@ -128,9 +133,10 @@ export default function RecorderSpike() {
     setRecording(true);
   };
 
+  // The controls come back only once the last file is written: no second recording on Android.
   const stop = async () => {
-    setRecording(false);
     await recorder.current?.stop();
+    setRecording(false);
   };
 
   const clear = () => {
@@ -205,8 +211,9 @@ export default function RecorderSpike() {
           {mbPerMin != null && ` · ${mbPerMin.toFixed(0)} Mo/min`} · {elapsedMin.toFixed(1)} min
         </Text>
         <Text style={[styles.text, stats.gaps > 0 && styles.warning]}>
-          À la coupe : dernier {stats.lastOverlapMs ?? '—'} ms · pire {stats.minOverlapMs ?? '—'} ms
-          · {stats.gaps} trous (négatif = images perdues entre deux points)
+          À la coupe (approximatif) : dernier {stats.lastOverlapMs ?? '—'} ms · pire{' '}
+          {stats.minOverlapMs ?? '—'} ms · {stats.gaps} trous (négatif = images perdues entre deux
+          points)
         </Text>
         <Text style={[styles.text, stats.errors > 0 && styles.warning]}>
           {stats.errors} erreurs

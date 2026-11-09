@@ -10,7 +10,7 @@ export function createMatch(config: MatchConfig, firstServer: SideId): MatchStat
     points: { [config.sides[0].id]: 0, [config.sides[1].id]: 0 },
     games: { [config.sides[0].id]: 0, [config.sides[1].id]: 0 },
     sets: { [config.sides[0].id]: 0, [config.sides[1].id]: 0 },
-    gamesPlayed: 0,
+    endsSwapped: false,
   };
 }
 
@@ -42,7 +42,9 @@ function afterGame(state: MatchState, winner: SideId): MatchState {
   const nextServer = opponent(state, state.tieBreak?.starter ?? state.server);
   // The key is dropped, not set to undefined: the tie-break is over.
   const { tieBreak: _over, ...carried } = state;
-  const base = { ...carried, server: nextServer, gamesPlayed: state.gamesPlayed + 1 };
+  // Ends change after every odd game of the set, the tie-break counting as one game (7-6 = 13).
+  const endsSwapped = (won + lost) % 2 === 1 ? !state.endsSwapped : state.endsSwapped;
+  const base = { ...carried, server: nextServer, endsSwapped };
 
   if (!setWon) {
     const inTieBreak = games[winner] === tieBreakAt && games[loser] === tieBreakAt;
@@ -106,6 +108,8 @@ function applyTieBreakPoint(state: MatchState, winner: SideId): MatchState {
     ...state,
     server: tieBreakServer(state, tieBreak.starter, won + lost),
     tieBreak: { ...tieBreak, points },
+    // Inside a tie-break, ends change every six points.
+    endsSwapped: (won + lost) % 6 === 0 ? !state.endsSwapped : state.endsSwapped,
   };
 }
 
@@ -263,21 +267,7 @@ export function isNearJump(from: MatchState, to: MatchState): boolean {
   return pointDistance(from, to) <= NEAR_JUMP_LIMIT;
 }
 
-/**
- * Whether the players stand on the opposite ends from where they started. They change ends after
- * every odd game of the match, counted across sets (the rule of changing at the end of a set with
- * an odd number of games, or after the first game of the next one, gives the same sequence), and
- * every six points inside a tie-break.
- */
-export function endsSwapped(state: MatchState): boolean {
-  const afterGames = Math.ceil(state.gamesPlayed / 2) % 2 === 1;
-  if (state.tieBreak === undefined) return afterGames;
-  const played = Object.values(state.tieBreak.points).reduce((total, points) => total + points, 0);
-  const insideTieBreak = Math.floor(played / 6) % 2 === 1;
-  return afterGames !== insideTieBreak;
-}
-
 /** Whether the players change ends between these two states (to tell them on screen). */
 export function isChangeOfEnds(before: MatchState, after: MatchState): boolean {
-  return endsSwapped(before) !== endsSwapped(after);
+  return before.endsSwapped !== after.endsSwapped;
 }
