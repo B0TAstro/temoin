@@ -36,7 +36,7 @@ export function toSetup(form: SetupForm): MatchSetup {
   return { config, firstServer: form.firstServer };
 }
 
-/** The setup travels to the match screen as a route parameter. */
+/** The setup travels to the match screen as a route parameter, and to guests in the snapshot. */
 export const encodeForm = (form: SetupForm) => JSON.stringify(form);
 
 export function decodeForm(raw: string | undefined): SetupForm {

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -15,6 +15,7 @@ import {
 } from 'react-native-vision-camera';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { replay as replayLog, type MatchView } from '@/core/events/matchLog';
 import { scoreLabel, sideName } from '@/core/score/labels';
 import type { SideId } from '@/core/score/types';
 import type { ClipsForReplay } from '@/features/recording/ClipRecorder';
@@ -25,19 +26,22 @@ import { type ReplayClip, type ReplayOutcome, ReplayScreen } from '@/features/re
 import { PendingBanner } from '@/features/score/PendingBanner';
 import { ScoreDisplay } from '@/features/score/ScoreDisplay';
 import { Scoreboard } from '@/features/score/Scoreboard';
+import { buildJoinLink } from '@/features/session/joinLink';
 import { decodeForm, toSetup } from '@/features/session/setup';
-import { useMatch } from '@/features/session/useMatch';
+import { type Session, useGuestSession, useHostSession } from '@/features/session/useSession';
 import { Button } from '@/ui/Button';
+import { QrCode } from '@/ui/QrCode';
 import { colors, radius } from '@/ui/theme';
 
 const TARGET_FPS = 60;
 const TARGET_BIT_RATE = 10_000_000;
 
 type Tab = 'score' | 'training';
-type Replay = { clips: ReplayClip[]; initialIndex: number };
+/** `forSeq`: the var-opened event this replay was frozen for. */
+type Replay = { clips: ReplayClip[]; initialIndex: number; forSeq: number };
 
 /** VAR clips, oldest first: the kept points, then what was filmed of the point in progress. */
-function toReplay({ finished, current }: ClipsForReplay): Replay {
+function toReplay({ finished, current }: ClipsForReplay): Omit<Replay, 'forSeq'> {
   const clips: ReplayClip[] = [...finished].reverse().map((clip, i, all) => ({
     key: `clip-${clip.id}`,
     title: clip.point?.label ?? '',
@@ -55,13 +59,61 @@ function toReplay({ finished, current }: ClipsForReplay): Replay {
   return { clips, initialIndex: Math.max(0, finished.length - 1) };
 }
 
+/** Host (created the session) or guest (scanned its QR code): same screen, same code. */
+export default function MatchRoute() {
+  const params = useLocalSearchParams<{ role?: string; s?: string; form?: string }>();
+  if (params.role === 'guest' && params.s) return <GuestMatch sessionId={params.s} />;
+  return <HostMatch sessionId={params.s ?? 'SOLO'} rawForm={params.form} />;
+}
+
+function HostMatch({ sessionId, rawForm }: { sessionId: string; rawForm: string | undefined }) {
+  const form = useMemo(() => decodeForm(rawForm), [rawForm]);
+  const session = useHostSession(sessionId, form);
+  if (!session.view) return null;
+  return <MatchScreen session={{ ...session, view: session.view }} />;
+}
+
+function GuestMatch({ sessionId }: { sessionId: string }) {
+  const session = useGuestSession(sessionId);
+  if (!session.view || !session.form) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.message}>
+          {session.link === 'connecting'
+            ? 'Connexion à l’hôte…'
+            : `Recherche de la session ${sessionId}…`}
+        </Text>
+        <Text style={styles.hint}>Gardez les deux téléphones proches, Bluetooth activé.</Text>
+        <Button label="Annuler" variant="outline" onPress={() => router.replace('/')} />
+      </View>
+    );
+  }
+  return <MatchScreen session={{ ...session, view: session.view }} />;
+}
+
+function linkLabel(session: Session): string {
+  if (session.role === 'host') {
+    if (session.link === 'off') return 'Bluetooth coupé · seul';
+    return session.guests === 0
+      ? 'Bluetooth ✓ · aucun invité'
+      : `Bluetooth ✓ · ${session.guests} invité(s)`;
+  }
+  switch (session.link) {
+    case 'connected':
+      return 'Bluetooth ✓ · relié à l’hôte';
+    case 'lost':
+      return 'Lien perdu, l’enregistrement continue';
+    default:
+      return 'Recherche de l’hôte…';
+  }
+}
+
 /** The match: the score read from a distance, the camera filming one file per point. */
-export default function MatchScreen() {
-  const params = useLocalSearchParams<{ form?: string }>();
-  const setup = useMemo(() => toSetup(decodeForm(params.form)), [params.form]);
-  const match = useMatch(setup);
-  const { state, pending, points, dispatch } = match;
+function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
+  const { view, dispatch, log } = session;
+  const { state, pending, points } = view;
   const [a, b] = state.config.sides;
+  const setup = useMemo(() => toSetup(session.form ?? decodeForm(undefined)), [session.form]);
 
   useKeepAwake(); // otherwise the screen locks and the OS stops the camera
   const { hasPermission, canRequestPermission, requestPermission } = useCameraPermission();
@@ -72,7 +124,7 @@ export default function MatchScreen() {
   const [cameraRunning, setCameraRunning] = useState(false);
   const [tab, setTab] = useState<Tab>('score');
   const [replay, setReplay] = useState<Replay | null>(null);
-  const [freezing, setFreezing] = useState(false);
+  const [showQr, setShowQr] = useState(false);
 
   useEffect(() => {
     if (!hasPermission && canRequestPermission) requestPermission();
@@ -97,24 +149,44 @@ export default function MatchScreen() {
 
   // Recording pauses during the replay, to spare the phone (heat, battery).
   const matchOver = state.matchWonBy !== undefined;
-  const cameraActive = replay == null && appActive && !matchOver;
+  const cameraActive = !view.varOpen && appActive && !matchOver;
   const { stats, clips } = useClipRecorder(videoOutput, cameraRunning && cameraActive);
+
+  // Every phone cuts its own file from the shared log, whoever pressed the button. A guest
+  // joining late skips what happened before it arrived.
+  const processed = useRef(log.length);
+  useEffect(() => {
+    for (let i = processed.current; i < log.length; i++) {
+      const event = log[i];
+      if (event?.type === 'point-proposed') {
+        const before = replayLog(setup, log.slice(0, i));
+        clips.endPoint({ pointIndex: before.points.length, label: scoreLabel(before.state) });
+      } else if (event?.type === 'point-rejected') {
+        clips.retract();
+      }
+    }
+    processed.current = log.length;
+  }, [log, setup, clips]);
+
+  // VAR opens and closes on every phone at once; each one plays its own clip.
+  const varSeq = view.varOpen ? (log.findLast((e) => e.type === 'var-opened')?.seq ?? 0) : 0;
+  useEffect(() => {
+    if (varSeq === 0) return;
+    let cancelled = false;
+    void clips.freeze().then((frozen) => {
+      if (!cancelled) setReplay({ ...toReplay(frozen), forSeq: varSeq });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [varSeq, clips]);
+  const shownReplay = varSeq !== 0 && replay?.forSeq === varSeq ? replay : null;
 
   const name = (side: SideId) => sideName(state, side);
 
-  const propose = (winner: SideId) => {
-    if (!dispatch({ type: 'point-proposed', winner })) return;
-    // The file is cut at the proposal, as close as possible to the end of the rally.
-    clips.endPoint({ pointIndex: points.length, label: scoreLabel(state) });
-  };
-
-  const reject = () => {
-    if (dispatch({ type: 'point-rejected' })) clips.retract();
-  };
-
   /** Training shortcut: the point counts at once, both sides agreeing. */
   const award = (winner: SideId) => {
-    propose(winner);
+    dispatch({ type: 'point-proposed', winner });
     dispatch({ type: 'point-confirmed' });
   };
 
@@ -128,15 +200,7 @@ export default function MatchScreen() {
       },
     ]);
 
-  const openVar = async () => {
-    if (freezing || replay) return;
-    setFreezing(true);
-    // Writes the file in progress so the replay contains the moment of the press.
-    setReplay(toReplay(await clips.freeze()));
-    setFreezing(false);
-  };
-
-  /** The players decided: the outcome goes to the log, then back to the score. */
+  /** The players decided: the outcome goes to the log, then every phone goes back to the score. */
   const onOutcome = (outcome: ReplayOutcome) => {
     if (pending !== undefined) {
       dispatch(
@@ -150,13 +214,13 @@ export default function MatchScreen() {
     } else {
       dispatch({ type: 'point-undone' });
     }
-    setReplay(null);
+    dispatch({ type: 'var-closed' });
   };
 
   const leave = () =>
-    Alert.alert('Terminer le match ?', 'Les vidéos seront supprimées de ce téléphone.', [
+    Alert.alert('Quitter le match ?', 'Les vidéos seront supprimées de ce téléphone.', [
       { text: 'Continuer', style: 'cancel' },
-      { text: 'Terminer', style: 'destructive', onPress: () => router.replace('/') },
+      { text: 'Quitter', style: 'destructive', onPress: () => router.replace('/') },
     ]);
 
   if (!hasPermission) {
@@ -179,8 +243,8 @@ export default function MatchScreen() {
     );
   }
 
-  const recording = stats.recording;
   const canPropose = pending === undefined && !matchOver;
+  const opening = view.varOpen && !shownReplay;
 
   return (
     <View style={styles.container}>
@@ -202,13 +266,20 @@ export default function MatchScreen() {
             />
           </View>
           <View style={styles.status}>
-            <Text style={[styles.rec, !recording && styles.recOff]}>
-              {recording ? '● REC' : matchOver ? 'Match terminé' : 'Caméra en pause'}
+            <Text style={[styles.rec, !stats.recording && styles.recOff]}>
+              {stats.recording ? '● REC' : matchOver ? 'Match terminé' : 'Caméra en pause'}
             </Text>
-            <Text style={styles.statusText}>Seul · {scoreLabel(state)}</Text>
-            <Pressable onPress={leave} hitSlop={12}>
-              <Text style={styles.leave}>Terminer le match</Text>
-            </Pressable>
+            <Text style={styles.statusText}>{linkLabel(session)}</Text>
+            <View style={styles.links}>
+              {session.role === 'host' && (
+                <Pressable onPress={() => setShowQr(true)} hitSlop={12}>
+                  <Text style={styles.link}>Inviter un téléphone</Text>
+                </Pressable>
+              )}
+              <Pressable onPress={leave} hitSlop={12}>
+                <Text style={styles.link}>Quitter</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
 
@@ -221,7 +292,7 @@ export default function MatchScreen() {
               <PendingBanner
                 winnerName={name(pending)}
                 onConfirm={() => dispatch({ type: 'point-confirmed' })}
-                onReject={reject}
+                onReject={() => dispatch({ type: 'point-rejected' })}
               />
             ) : (
               <View style={styles.row}>
@@ -229,7 +300,7 @@ export default function MatchScreen() {
                   <Button
                     key={side.id}
                     label={`+1 ${name(side.id)}`}
-                    onPress={() => propose(side.id)}
+                    onPress={() => dispatch({ type: 'point-proposed', winner: side.id })}
                     disabled={!canPropose}
                     style={styles.flex}
                   />
@@ -238,10 +309,10 @@ export default function MatchScreen() {
             )}
             <View style={styles.row}>
               <Button
-                label={freezing ? '…' : 'VAR'}
+                label={opening ? '…' : 'VAR'}
                 variant="var"
-                onPress={openVar}
-                disabled={freezing}
+                onPress={() => dispatch({ type: 'var-opened' })}
+                disabled={view.varOpen}
                 style={styles.flex}
               />
               <Button
@@ -285,7 +356,9 @@ export default function MatchScreen() {
                 {stats.savedCount + 1} points gardés · {stats.totalMB.toFixed(0)} Mo ·{' '}
                 {stats.deletedCount} fichiers supprimés · {stats.errorCount} erreurs
               </Text>
-              <Text style={styles.statsText}>{match.log.length} événements dans le journal</Text>
+              <Text style={styles.statsText}>
+                Session {session.sessionId} · {log.length} événements
+              </Text>
             </View>
           </ScrollView>
         )}
@@ -306,17 +379,27 @@ export default function MatchScreen() {
         />
       </SafeAreaView>
 
-      {replay && (
+      {showQr && (
+        <View style={styles.qrOverlay}>
+          <Text style={styles.qrTitle}>Scannez pour rejoindre</Text>
+          <QrCode value={buildJoinLink(session.sessionId)} size={260} />
+          <Text style={styles.qrCode}>Session {session.sessionId}</Text>
+          <Text style={styles.hint}>Sur l’autre téléphone : Témoin › Rejoindre une session</Text>
+          <Button label="Fermer" variant="outline" onPress={() => setShowQr(false)} />
+        </View>
+      )}
+
+      {shownReplay && (
         <ReplayScreen
-          clips={replay.clips}
-          initialIndex={replay.initialIndex}
+          clips={shownReplay.clips}
+          initialIndex={shownReplay.initialIndex}
           fps={selectedFps ?? TARGET_FPS}
           sides={[
             { id: a.id, name: name(a.id) },
             { id: b.id, name: name(b.id) },
           ]}
           onOutcome={onOutcome}
-          onClose={() => setReplay(null)}
+          onClose={() => dispatch({ type: 'var-closed' })}
         />
       )}
     </View>
@@ -374,7 +457,8 @@ const styles = StyleSheet.create({
   rec: { color: colors.ball, fontSize: 18, fontWeight: '800' },
   recOff: { color: colors.lineDim },
   statusText: { color: colors.line, fontSize: 16 },
-  leave: { color: colors.lineDim, fontSize: 16, textDecorationLine: 'underline' },
+  links: { flexDirection: 'row', gap: 24 },
+  link: { color: colors.lineDim, fontSize: 16, textDecorationLine: 'underline' },
   body: { flex: 1, gap: 16, paddingBottom: 16 },
   board: { flex: 1, justifyContent: 'center' },
   row: { flexDirection: 'row', gap: 16 },
@@ -392,4 +476,18 @@ const styles = StyleSheet.create({
   },
   tab: { flex: 1, alignItems: 'center', gap: 2, paddingBottom: 4 },
   tabLabel: { fontSize: 16, fontWeight: '600' },
+  qrOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(17,17,17,0.95)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 20,
+    padding: 24,
+  },
+  qrTitle: { color: colors.line, fontSize: 28, fontWeight: '800' },
+  qrCode: { color: colors.ball, fontSize: 28, fontWeight: '800', letterSpacing: 4 },
 });
