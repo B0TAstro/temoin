@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { BleGuest, BleHost, type LinkStatus } from '@/adapters/link/ble';
+import { BleGuest, type LinkStatus } from '@/adapters/link/ble/BleGuest';
+import { BleHost } from '@/adapters/link/ble/BleHost';
 import {
   isValid,
   type LoggedEvent,
