@@ -2,7 +2,7 @@
   "expo": {
     "name": "Témoin",
     "slug": "temoin",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "temoin",
@@ -51,7 +51,7 @@
         "react-native-vosk",
         {
           "models": ["assets/model-fr-fr"],
-          "iOSMicrophonePermission": "Témoin écoute l'annonce du score pour le mettre à jour sans toucher au téléphone. Rien n'est enregistré ni envoyé."
+          "iOSMicrophonePermission": "Témoin enregistre le son avec la vidéo pour revoir un point contesté, et écoute l'annonce du score pour le mettre à jour. Le son reste sur ce téléphone et est supprimé en fin de match."
         }
       ],
       "expo-screen-orientation",

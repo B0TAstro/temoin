@@ -1,0 +1,62 @@
+import AVFoundation
+import ExpoModulesCore
+
+/// Decoded at a low rate, mono: enough to see a hit or a bounce, and cheap.
+private let sampleRate = 16_000
+
+public final class AudioEnvelopeModule: Module {
+  public func definition() -> ModuleDefinition {
+    Name("AudioEnvelope")
+
+    AsyncFunction("read") { (path: String, windowMs: Double) async throws -> [Double] in
+      let url = path.hasPrefix("file://") ? URL(string: path)! : URL(fileURLWithPath: path)
+      return try await readEnvelope(url: url, windowMs: windowMs)
+    }
+  }
+}
+
+private func readEnvelope(url: URL, windowMs: Double) async throws -> [Double] {
+  let asset = AVURLAsset(url: url)
+  guard let track = try await asset.loadTracks(withMediaType: .audio).first else { return [] }
+
+  let reader = try AVAssetReader(asset: asset)
+  // The reader converts the AAC track to plain float samples, resampled and mixed down to mono.
+  let output = AVAssetReaderTrackOutput(
+    track: track,
+    outputSettings: [
+      AVFormatIDKey: kAudioFormatLinearPCM,
+      AVSampleRateKey: sampleRate,
+      AVNumberOfChannelsKey: 1,
+      AVLinearPCMBitDepthKey: 32,
+      AVLinearPCMIsFloatKey: true,
+      AVLinearPCMIsNonInterleaved: false,
+      AVLinearPCMIsBigEndianKey: false,
+    ])
+  reader.add(output)
+  guard reader.startReading() else { throw reader.error ?? CocoaError(.fileReadUnknown) }
+
+  let window = max(1, Int(Double(sampleRate) * windowMs / 1000))
+  var envelope: [Double] = []
+  var sum = 0.0
+  var count = 0
+  while let buffer = output.copyNextSampleBuffer() {
+    guard let block = CMSampleBufferGetDataBuffer(buffer) else { continue }
+    let length = CMBlockBufferGetDataLength(block)
+    var samples = [Float](repeating: 0, count: length / MemoryLayout<Float>.size)
+    samples.withUnsafeMutableBytes { bytes in
+      _ = CMBlockBufferCopyDataBytes(
+        block, atOffset: 0, dataLength: bytes.count, destination: bytes.baseAddress!)
+    }
+    for sample in samples {
+      sum += Double(sample * sample)
+      count += 1
+      if count == window {
+        envelope.append((sum / Double(count)).squareRoot())
+        sum = 0
+        count = 0
+      }
+    }
+  }
+  if reader.status == .failed { throw reader.error ?? CocoaError(.fileReadUnknown) }
+  return envelope
+}

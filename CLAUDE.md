@@ -145,7 +145,15 @@ Ce qui est en place en v0.3 :
 - Doublons : `afterSeq` est le dernier événement que le téléphone avait en entendant l'annonce. L'hôte ne l'accepte que si le journal n'a pas bougé depuis : la copie d'un autre téléphone, ou une copie en retard après « Annuler le point », est ignorée. Refusée aussi pendant le VAR. **Simplification** : la première annonce reçue gagne, pas encore de fenêtre « meilleure confiance » entre téléphones.
 - Resynchronisation du POC : un saut de 1 ou 2 points en avant (annonce manquée) est appliqué en un seul événement, sauf si deux ordres des points y mènent (0-0 → 15-15) : l'app ne devine pas qui a gagné le dernier point ; un saut en arrière est affiché, jamais appliqué (on corrige au tap).
 - L'écoute est coupée pendant le VAR (les joueurs discutent devant le replay) et quand la caméra est en pause. Bouton pour couper la voix.
-- La vidéo reste sans son : Vosk a le micro pour lui seul.
+- En v0.3 la vidéo était sans son. Depuis la v0.4, caméra et Vosk partagent le micro (voir Son).
+
+## Son (v0.4)
+
+- La vidéo enregistre le son (`enableAudio`) si le micro est autorisé, demandé juste après la caméra. Refusé : vidéo muette, rien d'autre ne change.
+- iOS : Vosk forçait la session audio en « enregistrement seul » et la désactivait à l'arrêt, ce qui aurait coupé le son de la vidéo à chaque changement de jeu (Vosk redémarre pour changer de grammaire). Patch `patches/react-native-vosk+2.1.7.patch` (appliqué par `postinstall`) : Vosk rejoint la session lecture + enregistrement de la caméra et ne la désactive plus. Android : rien à changer, CameraX et Vosk lisent le micro en même temps (constaté au premier test, son et voix ensemble).
+- Le replay joue le son à ×1 seulement (étiré au ralenti, il n'aide pas), même téléphone en silencieux.
+- **Pics sonores** : calculés à l'ouverture du VAR, sur le point affiché seulement. Le module natif local `modules/audio-envelope` lit la piste audio du clip (AVAssetReader sur iOS, MediaExtractor + MediaCodec sur Android) et renvoie le volume (RMS) par tranches de 10 ms. `core/audio/peaks.ts` garde les maximums locaux 4 fois au-dessus du fond sonore du clip (la médiane), espacés d'au moins 80 ms. Seuils de départ, à régler sur un vrai court.
+- Une marque dit « bruit fort ici », jamais ce que c'était (frappe, rebond, cri, grillage). Les boutons « ◀ Son » / « Son ▶ » mettent en pause 0,15 s avant le pic, pour avancer image par image.
 
 ## VAR
 
