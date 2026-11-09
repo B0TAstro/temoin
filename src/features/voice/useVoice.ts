@@ -55,6 +55,8 @@ export function useVoice({
     let cancelled = false;
 
     const onResult = (text: string) => {
+      // A stop is serialised behind a pending start: the recognizer may still answer briefly.
+      if (cancelled) return;
       setPartial('');
       const current = stateRef.current;
       const decision = decide(current, text);
@@ -69,7 +71,7 @@ export function useVoice({
       } else if (decision.type === 'unchanged') {
         setHeard({ text, result: `Score inchangé (${scoreLabel(current)})` });
       } else if (decision.type === 'resync') {
-        setHeard({ text, result: 'Score annoncé trop éloigné : corrigez au tap' });
+        setHeard({ text, result: 'Score annoncé non appliqué : corrigez au tap' });
       } else {
         setHeard({ text, result: 'Pas compris, rien ne change' });
       }
@@ -86,8 +88,7 @@ export function useVoice({
     engineRef.current = engine;
     engine.start().then(
       () => {
-        if (cancelled) engine.stop();
-        else setStarted('listening');
+        if (!cancelled) setStarted('listening');
       },
       (reason: unknown) => {
         if (cancelled) return;
@@ -98,7 +99,7 @@ export function useVoice({
 
     return () => {
       cancelled = true;
-      engine.stop();
+      void engine.stop();
       engineRef.current = null;
       setStarted(undefined);
       setPartial('');
@@ -107,7 +108,13 @@ export function useVoice({
 
   // Keep the running recogniser in step with the current game.
   useEffect(() => {
-    void engineRef.current?.setGrammar(grammarRef.current);
+    const engine = engineRef.current;
+    // Changing the grammar restarts the recognizer, which can fail like the first start.
+    void engine?.setGrammar(grammarRef.current).catch((reason: unknown) => {
+      if (engineRef.current !== engine) return;
+      setStarted('error');
+      setError(String(reason));
+    });
   }, [grammarKey]);
 
   const status: VoiceStatus = enabled ? (started ?? 'starting') : 'off';

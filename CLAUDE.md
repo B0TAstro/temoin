@@ -141,9 +141,9 @@ Avec un seul téléphone, c'est le même chemin avec un seul candidat. Avec plus
 
 Ce qui est en place en v0.3 :
 - Code du POC voix repris tel quel : `core/score/announce.ts` (formulations attendues), `core/voice/` (normalisation, lexique, similarité, `decide`, grammaire). Son `ScoreListener` n'est pas repris : le journal d'événements tient ce rôle.
-- Une annonce comprise devient l'événement `point-called { winners, point }` : le point compte tout de suite (silence du receveur = accord) et le clip est coupé. Pour contester : VAR ou « Annuler le point ».
-- Doublons : l'hôte n'accepte `point-called` que si `point` est le numéro du prochain point. **Simplification** : la première annonce reçue gagne, pas encore de fenêtre « meilleure confiance » entre téléphones.
-- Resynchronisation du POC : un saut de 1 ou 2 points en avant (annonce manquée) est appliqué en un seul événement ; un saut en arrière est affiché, jamais appliqué (on corrige au tap).
+- Une annonce comprise devient l'événement `point-called { winners, afterSeq }` : le point compte tout de suite (silence du receveur = accord) et le clip est coupé. Pour contester : VAR ou « Annuler le point ».
+- Doublons : `afterSeq` est le dernier événement que le téléphone avait en entendant l'annonce. L'hôte ne l'accepte que si le journal n'a pas bougé depuis : la copie d'un autre téléphone, ou une copie en retard après « Annuler le point », est ignorée. Refusée aussi pendant le VAR. **Simplification** : la première annonce reçue gagne, pas encore de fenêtre « meilleure confiance » entre téléphones.
+- Resynchronisation du POC : un saut de 1 ou 2 points en avant (annonce manquée) est appliqué en un seul événement, sauf si deux ordres des points y mènent (0-0 → 15-15) : l'app ne devine pas qui a gagné le dernier point ; un saut en arrière est affiché, jamais appliqué (on corrige au tap).
 - L'écoute est coupée pendant le VAR (les joueurs discutent devant le replay) et quand la caméra est en pause. Bouton pour couper la voix.
 - La vidéo reste sans son : Vosk a le micro pour lui seul.
 

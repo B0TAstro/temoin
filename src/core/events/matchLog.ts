@@ -11,10 +11,12 @@ export type MatchEvent =
   /**
    * The server called the new score out loud and the voice recognition understood it. The points
    * count at once, the receiver's silence being their agreement. Usually one winner, two when the
-   * call shows a call was missed. `point` is the number of the first point it ends (0 for the
-   * first): every phone listens, and only the first call for a point counts.
+   * call shows a call was missed. `afterSeq` is the last event the phone had when it heard the
+   * call: every phone listens, and a call only counts on the log it was heard against. The first
+   * call moves the log on, so a second phone's copy, or a late copy after "Annuler le point", is
+   * dropped.
    */
-  | { type: 'point-called'; winners: SideId[]; point: number }
+  | { type: 'point-called'; winners: SideId[]; afterSeq: number }
   /** The other side agrees: the point counts, for `winner` if the replay changed their minds. */
   | { type: 'point-confirmed'; winner?: SideId }
   /** The other side disagrees, or the players chose "point rejoué" in the replay. */
@@ -43,6 +45,8 @@ export type MatchView = {
   pending?: SideId;
   /** The replay is open on every phone. */
   varOpen: boolean;
+  /** Number of the last event replayed, 0 for an empty log. */
+  seq: number;
 };
 
 /** Replays the log into the score. Pure: the same log always gives the same score. */
@@ -82,7 +86,8 @@ export function replay(setup: MatchSetup, log: readonly LoggedEvent[]): MatchVie
   }
 
   const state = points.reduce(applyPoint, createMatch(setup.config, setup.firstServer));
-  return { state, points, varOpen, ...(pending !== undefined && { pending }) };
+  const seq = log.at(-1)?.seq ?? 0;
+  return { state, points, varOpen, seq, ...(pending !== undefined && { pending }) };
 }
 
 /** Whether `event` changes anything, given the current view. Invalid intents are ignored. */
@@ -91,11 +96,13 @@ export function isValid(view: MatchView, event: MatchEvent): boolean {
     case 'point-proposed':
       return view.pending === undefined && view.state.matchWonBy === undefined;
     case 'point-called':
-      // Another phone already called this point: a duplicate.
+      // Something happened since the call was heard (another phone's copy of it, an undo): stale.
+      // Never during the replay: a call sent just before VAR must not move the frozen score.
       return (
+        !view.varOpen &&
         view.pending === undefined &&
         view.state.matchWonBy === undefined &&
-        event.point === view.points.length
+        event.afterSeq === view.seq
       );
     case 'point-confirmed':
     case 'point-rejected':

@@ -6,6 +6,17 @@ const MODEL = 'model-fr-fr';
 
 let modelLoaded: Promise<void> | null = null;
 
+/**
+ * Vosk is one recognizer for the whole app. Every start and stop, from every engine, waits for the
+ * previous one: a stale engine finishing its start late can then never stop its successor.
+ */
+let transitions: Promise<void> = Promise.resolve();
+function serially(task: () => Promise<void>): Promise<void> {
+  const next = transitions.then(task);
+  transitions = next.catch(() => undefined);
+  return next;
+}
+
 export type VoskHooks = {
   onResult: (text: string) => void;
   onPartial?: (text: string) => void;
@@ -22,15 +33,41 @@ export class VoskEngine {
   #grammar: string[];
   #hooks: VoskHooks;
   #subscriptions: EventSubscription[] = [];
+  /** What the caller asked for last. Each transition brings the recognizer in line with it. */
+  #wanted = false;
   #running = false;
+  /** The grammar changed while running: the next transition restarts the recognizer. */
+  #stale = false;
 
   constructor(grammar: string[], hooks: VoskHooks) {
     this.#grammar = grammar;
     this.#hooks = hooks;
   }
 
-  async start(): Promise<void> {
-    if (this.#running) return;
+  start(): Promise<void> {
+    this.#wanted = true;
+    return serially(() => this.#sync());
+  }
+
+  /** Takes effect even while a start is still pending: that start then ends stopped. */
+  stop(): Promise<void> {
+    this.#wanted = false;
+    return serially(() => this.#sync());
+  }
+
+  setGrammar(grammar: string[]): Promise<void> {
+    if (grammar.join('\u0000') === this.#grammar.join('\u0000')) return Promise.resolve();
+    this.#grammar = grammar;
+    this.#stale = true;
+    return serially(() => this.#sync());
+  }
+
+  async #sync(): Promise<void> {
+    if (this.#running && (!this.#wanted || this.#stale)) this.#halt();
+    if (this.#wanted && !this.#running) await this.#begin();
+  }
+
+  async #begin(): Promise<void> {
     // Loaded once for the whole app: about a second for the 65 MB model.
     modelLoaded ??= Vosk.loadModel(MODEL).catch((error: unknown) => {
       modelLoaded = null;
@@ -46,32 +83,26 @@ export class VoskEngine {
       Vosk.onPartialResult((text) => this.#hooks.onPartial?.(text)),
       Vosk.onError((error: unknown) => this.#hooks.onError?.(String(error))),
     ];
+    this.#stale = false;
     // Deliberately no timeout: it stops the recognizer, and we listen for a whole game. The native
     // tap keeps running and emits onResult after every detected silence.
     try {
       await Vosk.start({ grammar: this.#grammar });
     } catch (error) {
-      for (const subscription of this.#subscriptions) subscription.remove();
-      this.#subscriptions = [];
+      this.#unsubscribe();
       throw error;
     }
     this.#running = true;
   }
 
-  stop(): void {
-    if (!this.#running) return;
+  #halt(): void {
     Vosk.stop();
-    for (const subscription of this.#subscriptions) subscription.remove();
-    this.#subscriptions = [];
+    this.#unsubscribe();
     this.#running = false;
   }
 
-  async setGrammar(grammar: string[]): Promise<void> {
-    if (grammar.join('\u0000') === this.#grammar.join('\u0000')) return;
-    this.#grammar = grammar;
-    if (this.#running) {
-      this.stop();
-      await this.start();
-    }
+  #unsubscribe(): void {
+    for (const subscription of this.#subscriptions) subscription.remove();
+    this.#subscriptions = [];
   }
 }

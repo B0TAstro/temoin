@@ -191,7 +191,8 @@ export function fullScorePhrasings(before: MatchState, after: MatchState): strin
   const lostWord = NUMBER_WORD[lost] ?? String(lost);
   const plural = won > 1 ? 'jeux' : 'jeu';
 
-  const points = pointPhrasings(after.points[server] as Point, after.points[receiver] as Point);
+  // The points as they would be called on their own: in a tie-break they live in `tieBreak`.
+  const points = expectedPhrasings(before, after);
 
   return points.flatMap((point) => [
     `${wonWord} ${plural} à ${lostWord} ${point}`,

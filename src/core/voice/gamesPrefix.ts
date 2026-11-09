@@ -32,9 +32,13 @@ export interface GamesPrefix {
  * shares it, so leaving it in the comparison only dilutes the differences that
  * matter. It is checked separately and stripped before matching.
  */
+/** Normalisation splits "dix-sept" in two: a tie-break score, never a games count of 10-7. */
+const AFTER_DIX = new Set(['sept', 'huit', 'neuf']);
+
 export function splitGamesPrefix(tokens: string[]): GamesPrefix | null {
   const server = NUMBERS[tokens[0] ?? ''];
   if (server === undefined) return null;
+  if (tokens[0] === 'dix' && AFTER_DIX.has(tokens[1] ?? '')) return null;
 
   let i = 1;
   if (tokens[i] === 'jeu') i++;

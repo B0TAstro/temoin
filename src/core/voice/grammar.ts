@@ -1,6 +1,6 @@
 import { COMMAND_SPOKEN } from './command';
 import { expectedPhrasings, fullScorePhrasings } from '@/core/score/announce';
-import { plausibleStates } from '@/core/score/stateMachine';
+import { nextCandidates, plausibleStates } from '@/core/score/stateMachine';
 import type { MatchState } from '@/core/score/types';
 
 /** Vosk's rejection token. Without it, the decoder forces noise into the vocabulary. */
@@ -47,7 +47,10 @@ export function staticGrammar(state: MatchState): string[] {
   const calls: string[] = [];
   const spelledOut: string[] = [];
 
-  for (const reachable of [...plausibleStates(state), state]) {
+  // The two candidates on top: in a tie-break, plausibleStates leaves out the scores that end it,
+  // and decide() still expects the "jeu et set" calls.
+  const candidates = nextCandidates(state).map((candidate) => candidate.state);
+  for (const reachable of [...plausibleStates(state), ...candidates, state]) {
     calls.push(...expectedPhrasings(state, reachable));
     // Without these the decoder cannot produce a spelled-out score at all,
     // and a long jump would be unreachable by voice. Only the canonical point

@@ -192,7 +192,8 @@ export function decide(
 
 /**
  * The points that lead from `from` to `to`, if at most `limit` points apart: a resync forward is
- * the "a call was missed" case, and the log only knows points. A jump backwards returns null.
+ * the "a call was missed" case, and the log only knows points. A jump backwards, or one that two
+ * orders of points reach, returns null.
  */
 export function pointsBetween(from: MatchState, to: MatchState, limit = 2): SideId[] | null {
   const target = stateKey(to);
@@ -204,8 +205,11 @@ export function pointsBetween(from: MatchState, to: MatchState, limit = 2): Side
         winners: [...winners, side.id],
       })),
     );
-    const found = paths.find((path) => stateKey(path.state) === target);
-    if (found) return found.winners;
+    const found = paths.filter((path) => stateKey(path.state) === target);
+    // 0-0 to 15-15 is A then B, or B then A. The score would be right either way, but undoing or
+    // correcting "the last point" would not: better not to apply it than to guess the order.
+    if (found.length > 1) return null;
+    if (found[0]) return found[0].winners;
   }
   return null;
 }

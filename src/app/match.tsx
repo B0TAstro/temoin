@@ -172,8 +172,8 @@ function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
   // of it must not count a point.
   const voice = useVoice({
     state,
-    enabled: voiceOn && cameraActive,
-    onPoints: (winners) => dispatch({ type: 'point-called', winners, point: points.length }),
+    enabled: voiceOn && cameraRunning && cameraActive,
+    onPoints: (winners) => dispatch({ type: 'point-called', winners, afterSeq: view.seq }),
   });
 
   // Every phone cuts its own file from the shared log, whoever pressed the button or heard the
@@ -265,7 +265,11 @@ function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
         <Text style={styles.message}>
           {facing === 'front' ? 'Aucune caméra avant.' : 'Aucune caméra arrière.'}
         </Text>
-        <Button label="Changer de caméra" variant="outline" onPress={() => setFacing('back')} />
+        <Button
+          label="Changer de caméra"
+          variant="outline"
+          onPress={() => setFacing(facing === 'back' ? 'front' : 'back')}
+        />
       </View>
     );
   }
