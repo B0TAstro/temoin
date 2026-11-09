@@ -13,7 +13,7 @@ import {
 } from 'react-native-vision-camera';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import type { Segment } from '@/adapters/camera/Segment';
+import type { Segment } from '@/core/clips/Segment';
 import { deleteFile, SegmentRecorder } from '@/adapters/camera/SegmentRecorder';
 import { useFpsMeter } from '@/features/recording/useFpsMeter';
 

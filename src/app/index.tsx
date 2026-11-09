@@ -1,37 +1,50 @@
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/ui/Button';
+import { colors } from '@/ui/theme';
+
+/** Home: two big buttons, nothing else (DESIGN §5.1). */
 export default function Home() {
   return (
-    <View style={styles.screen}>
-      <Text style={styles.title} accessibilityRole="header">
-        Témoin
-      </Text>
-      {/* Spike screens stay reachable in release builds too, so the PR APK can run them on Android.
-          Removed once the match screens land. */}
+    <SafeAreaView style={styles.screen}>
+      <View style={styles.header}>
+        <Text style={styles.title} accessibilityRole="header">
+          Témoin
+        </Text>
+        <Text style={styles.subtitle}>Montrer plutôt que trancher.</Text>
+      </View>
+
+      <View style={styles.actions}>
+        <Button label="Créer une session" onPress={() => router.push('/create')} />
+        <Button
+          label="Rejoindre une session"
+          detail="Bientôt : scanner le QR code de l’hôte"
+          variant="outline"
+          disabled
+          onPress={() => {}}
+        />
+      </View>
+
+      {/* Spike screen, reachable in release builds too so the PR APK can run it on Android. */}
       <Link href="/dev/recorder" style={styles.devLink}>
         Test enregistreur
       </Link>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 32,
-    backgroundColor: '#111111',
+    backgroundColor: colors.ink,
+    paddingHorizontal: 24,
+    justifyContent: 'space-between',
   },
-  title: {
-    color: '#FFFFFF',
-    fontSize: 48,
-    fontWeight: '700',
-  },
-  devLink: {
-    color: '#E9B44C',
-    fontSize: 18,
-    padding: 16,
-  },
+  header: { marginTop: 48, gap: 8 },
+  title: { color: colors.line, fontSize: 56, fontWeight: '800' },
+  subtitle: { color: colors.lineDim, fontSize: 20 },
+  actions: { gap: 16 },
+  devLink: { color: colors.lineDim, fontSize: 16, textAlign: 'center', padding: 16 },
 });

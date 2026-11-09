@@ -2,7 +2,7 @@ import { Directory, File } from 'expo-file-system';
 import { Platform } from 'react-native';
 import type { CameraVideoOutput, Recorder } from 'react-native-vision-camera';
 
-import type { Segment } from './Segment';
+import type { Segment } from '@/core/clips/Segment';
 
 /**
  * Safety limit: a point nobody scores (forgotten tap, changeover) starts a new file after this
