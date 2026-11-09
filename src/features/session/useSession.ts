@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { BleGuest, type LinkStatus } from '@/adapters/link/ble/BleGuest';
+import { BleGuest } from '@/adapters/link/ble/BleGuest';
 import { BleHost } from '@/adapters/link/ble/BleHost';
+import { LocalHost } from '@/adapters/link/LocalTransport';
+import type { GuestTransport, HostTransport, LinkStatus } from '@/adapters/link/Transport';
 import {
   isValid,
   type LoggedEvent,
@@ -38,7 +40,7 @@ export function useHostSession(sessionId: string, form: SetupForm): Session {
   const logRef = useRef<LoggedEvent[]>([]);
   const [link, setLink] = useState<LinkStatus | 'off'>('off');
   const [guests, setGuests] = useState(0);
-  const host = useRef<BleHost<GuestMessage, HostMessage<SetupForm>> | null>(null);
+  const host = useRef<HostTransport<HostMessage<SetupForm>> | null>(null);
 
   const dispatch = useCallback(
     (event: MatchEvent) => {
@@ -47,7 +49,7 @@ export function useHostSession(sessionId: string, form: SetupForm): Session {
       const logged = { ...event, seq: current.length + 1 } as LoggedEvent;
       logRef.current = [...current, logged];
       setLog(logRef.current);
-      host.current?.send({ t: 'event', event: logged });
+      host.current?.broadcast({ t: 'event', event: logged });
     },
     [setup],
   );
@@ -57,20 +59,29 @@ export function useHostSession(sessionId: string, form: SetupForm): Session {
       sessionId,
       (message) => {
         if (message.t === 'intent') dispatch(message.event);
-        else ble.send({ t: 'snapshot', setup: form, log: logRef.current });
+        else ble.broadcast({ t: 'snapshot', setup: form, log: logRef.current });
       },
       setGuests,
     );
     host.current = ble;
+    let active = true;
+    // No Bluetooth (refused, unavailable): the match goes on with no radio at all.
+    const playAlone = () => {
+      if (!active) return;
+      ble.stop();
+      host.current = new LocalHost();
+      setLink('off');
+    };
     ble
       .start()
-      .then((started) => setLink(started ? 'connected' : 'off'))
+      .then((started) => (started ? setLink('connected') : playAlone()))
       .catch((e) => {
         console.warn('BLE host', e);
-        setLink('off');
+        playAlone();
       });
     return () => {
-      ble.stop();
+      active = false;
+      host.current?.stop();
       host.current = null;
     };
   }, [sessionId, form, dispatch]);
@@ -87,7 +98,7 @@ export function useGuestSession(sessionId: string): Session {
   const [form, setForm] = useState<SetupForm>();
   const [log, setLog] = useState<LoggedEvent[]>([]);
   const [link, setLink] = useState<LinkStatus | 'off'>('searching');
-  const guest = useRef<BleGuest<HostMessage<SetupForm>, GuestMessage> | null>(null);
+  const guest = useRef<GuestTransport<GuestMessage> | null>(null);
 
   useEffect(() => {
     const ble = new BleGuest<HostMessage<SetupForm>, GuestMessage>(

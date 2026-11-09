@@ -10,12 +10,13 @@ import {
 import { Decoder, encode } from './framing';
 import { advertisedName, sameUuid, SERVICE, TO_GUESTS, TO_HOST } from './gatt';
 import { SerialSender } from './SerialSender';
+import type { HostTransport } from '../Transport';
 
 /**
  * The host phone: a BLE peripheral. Advertises the session, receives the guests' messages and
  * notifies every subscribed guest. Notifications go to all guests at once.
  */
-export class BleHost<In, Out> {
+export class BleHost<In, Out> implements HostTransport<Out> {
   private readonly decoders = new Map<string, Decoder<In>>();
   private readonly guests = new Set<string>();
   private readonly sender = new SerialSender();
@@ -68,7 +69,7 @@ export class BleHost<In, Out> {
     return true;
   }
 
-  send(message: Out) {
+  broadcast(message: Out) {
     this.sender.send(encode(message), (chunk) =>
       updateCharacteristicValue(SERVICE, TO_GUESTS, chunk, true),
     );

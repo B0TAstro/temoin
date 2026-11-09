@@ -15,16 +15,15 @@ import { Platform } from 'react-native';
 import { Decoder, encode } from './framing';
 import { advertisedName, sameUuid, SERVICE, TO_GUESTS, TO_HOST } from './gatt';
 import { SerialSender } from './SerialSender';
+import type { GuestTransport, LinkStatus } from '../Transport';
 
 const RETRY_MS = 2000;
-
-export type LinkStatus = 'searching' | 'connecting' | 'connected' | 'lost';
 
 /**
  * A guest phone: a BLE central. Finds the host by the name in the QR code, subscribes to its
  * notifications and writes its own messages. Reconnects on its own when the link drops.
  */
-export class BleGuest<In, Out> {
+export class BleGuest<In, Out> implements GuestTransport<Out> {
   private deviceId: string | undefined;
   private decoder = new Decoder<In>();
   private readonly sender = new SerialSender();
