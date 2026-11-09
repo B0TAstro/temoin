@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/ui/Button';
 import { colors } from '@/ui/theme';
 
-/** Home: two big buttons, nothing else (DESIGN §5.1). */
+/** Home: two big buttons, nothing else (design.md §5.1). */
 export default function Home() {
   return (
     <SafeAreaView style={styles.screen}>

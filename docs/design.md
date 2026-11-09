@@ -1,4 +1,4 @@
-# DESIGN.md · Témoin
+# Design · Témoin
 
 ## 1. Intention
 
@@ -22,7 +22,7 @@ Témoin doit **soulager la charge mentale** du joueur, pas en ajouter. Il se fai
 
 ## 4. Parcours principal
 
-Schéma complet : `docs/schemas/parcours.png`.
+Schéma complet : [`parcours.md`](parcours.md).
 
 ```
 1 Accueil ─► 2a Créer ──────┐

@@ -3,6 +3,5 @@ node_modules/
 ios/
 android/
 dist/
-docs/schemas/*.svg
 package-lock.json
 *.md

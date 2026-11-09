@@ -22,7 +22,7 @@ function openMatch({ sessionId, key }: Join) {
   router.replace({ pathname: '/match', params: { role: 'guest', s: sessionId, k: key } });
 }
 
-/** Scans the host's QR code (DESIGN §5.3). Also reached through the temoin://join link. */
+/** Scans the host's QR code (design.md §5.3). Also reached through the temoin://join link. */
 export default function JoinScreen() {
   const params = useLocalSearchParams<{ s?: string; k?: string; v?: string }>();
   const linked = toJoin(params);

@@ -13,6 +13,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "setup:model": "./scripts/setup-model.sh",
+    "docs:images": "./scripts/docs-images.sh",
     "postinstall": "patch-package"
   },
   "dependencies": {

@@ -55,7 +55,7 @@ Les libs marquées « candidate » ou non encore testées sur Android doivent ê
 
 ## Architecture
 
-Schémas : `docs/schemas/architecture.png`, `docs/schemas/parcours.png` et `docs/schemas/synchro.png` (voix et VAR entre téléphones).
+Schémas (Mermaid, affichés par GitHub) : `docs/architecture.md`, `docs/parcours.md` et `docs/synchro.md` (voix et VAR entre téléphones). Les PNG pour les slides sont dans `docs/images/`, regénérés par `npm run docs:images` : on modifie le `.md`, jamais l'image.
 
 ```
 models/         modèle Vosk (téléchargé par `npm run setup:model`, jamais commité)
@@ -63,7 +63,7 @@ modules/        modules natifs locaux (audio-envelope : volume de la piste son d
 assets/         icon/ (icône, splash) et images/ (images de l'interface) uniquement
 src/
 ├── app/        routes expo-router, minces : elles assemblent, aucune règle métier
-├── ui/         composants du design system (voir DESIGN.md) : Button, IconButton, TabButton, MessageScreen…
+├── ui/         composants du design system (voir `docs/design.md`) : Button, IconButton, TabButton, MessageScreen…
 ├── features/   le code React, par fonctionnalité
 │   ├── match/      écran de match (colonnes, caméra du match)
 │   ├── session/    hôte et invité (useHostSession, useGuestSession), QR, état du lien

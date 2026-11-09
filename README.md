@@ -59,7 +59,7 @@ Each version adds a building block without breaking the previous one. Each versi
 - **Bluetooth Low Energy** between phones, local Wi-Fi as automatic fallback
 - **OpenCV** (via `react-native-fast-opencv`) for pixels, geometry (homography, Kalman filter, bounce detection) in pure TypeScript
 
-Architecture, conventions and design system: [`CLAUDE.md`](CLAUDE.md), [`DESIGN.md`](DESIGN.md), [`docs/schemas`](docs/schemas).
+Architecture, conventions and design system: [`CLAUDE.md`](CLAUDE.md), [`docs/design.md`](docs/design.md), diagrams in [`docs/`](docs).
 
 ## Getting started
 

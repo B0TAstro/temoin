@@ -1,3 +1,10 @@
+# Parcours
+
+Le parcours **cible (v1.0)**, écran par écran. Pas encore construits : l'écran 3 (connexion et placement : on arrive directement sur le match), l'écran 6 (corriger le score : « Annuler le point » en tient lieu) et l'écran 7 (fin de match). Le détail de chaque écran est dans [`design.md`](design.md).
+
+Image pour les slides : [`images/parcours.png`](images/parcours.png) (`npm run docs:images` la regénère depuis ce fichier).
+
+```mermaid
 %%{init: {'theme':'base','themeVariables':{'fontFamily':'Helvetica, Arial','fontSize':'15px','primaryColor':'#FFFFFF','primaryTextColor':'#111111','primaryBorderColor':'#111111','lineColor':'#111111'}}}%%
 flowchart TB
   E1["<b>ÉCRAN 1 · Accueil</b><br/>━━━━━━━━━━━━<br/>[ Créer une session ]<br/>[ Rejoindre une session ]"]
@@ -43,3 +50,4 @@ flowchart TB
   class E2A,E2B,E3,E7 std
   classDef input fill:#E8F1EC,stroke:#3E7A57,stroke-width:2px,color:#111111
   class VOIX,TAP input
+```

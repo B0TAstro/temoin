@@ -4,7 +4,7 @@ import { colors, radius, touch } from './theme';
 
 type Variant = 'primary' | 'outline' | 'var' | 'soft';
 
-/** Large match button: 64 pt minimum, readable with a sweaty thumb (DESIGN §7.3). */
+/** Large match button: 64 pt minimum, readable with a sweaty thumb (design.md §7.3). */
 export function Button({
   label,
   detail,
