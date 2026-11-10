@@ -1,5 +1,5 @@
 name: 🤖 Build Android APK
-description: Generates the native Android project and builds a release APK.
+description: Generates the native Android project and builds a release APK
 
 outputs:
   apk-path:
@@ -9,11 +9,8 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: 🧰 Setup Node
-      uses: actions/setup-node@v7
-      with:
-        node-version: lts/*
-        cache: npm
+    - name: 🧰 Setup
+      uses: ./.github/actions/setup
 
     - name: ☕ Setup Java
       uses: actions/setup-java@v6
@@ -24,9 +21,11 @@ runs:
     - name: 🐘 Setup Gradle
       uses: gradle/actions/setup-gradle@v6
 
-    - name: 📦 Install dependencies
-      shell: bash
-      run: npm ci
+    - name: 💾 Cache the Vosk model
+      uses: actions/cache@v6
+      with:
+        path: models
+        key: vosk-${{ hashFiles('scripts/setup-model.sh') }}
 
     - name: 🗣️ Download the Vosk model
       shell: bash
@@ -36,7 +35,6 @@ runs:
       shell: bash
       run: npx expo prebuild --platform android --clean --no-install
 
-    # Signed with the debug key of the Expo template: installable on any phone, not publishable on a store.
     - name: 🏗️ Build release APK
       shell: bash
       working-directory: android

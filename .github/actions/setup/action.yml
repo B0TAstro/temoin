@@ -1,0 +1,15 @@
+name: 🧰 Setup
+description: Installs Node and the project's dependencies
+
+runs:
+  using: composite
+  steps:
+    - name: 🧰 Setup Node
+      uses: actions/setup-node@v7
+      with:
+        node-version: lts/*
+        cache: npm
+
+    - name: 📦 Install dependencies
+      shell: bash
+      run: npm ci

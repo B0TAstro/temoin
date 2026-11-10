@@ -1,0 +1,53 @@
+# Parcours
+
+Le parcours **cible (v1.0)**, écran par écran. Pas encore construits : l'écran 3 (connexion et placement : on arrive directement sur le match), l'écran 6 (corriger le score : « Annuler le point » en tient lieu) et l'écran 7 (fin de match). Le détail de chaque écran est dans [`design.md`](design.md).
+
+Image pour les slides : [`images/parcours.png`](images/parcours.png) (`npm run docs:images` la regénère depuis ce fichier).
+
+```mermaid
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'Helvetica, Arial','fontSize':'15px','primaryColor':'#FFFFFF','primaryTextColor':'#111111','primaryBorderColor':'#111111','lineColor':'#111111'}}}%%
+flowchart TB
+  E1["<b>ÉCRAN 1 · Accueil</b><br/>━━━━━━━━━━━━<br/>[ Créer une session ]<br/>[ Rejoindre une session ]"]
+
+  E2A["<b>ÉCRAN 2a · Créer</b><br/>━━━━━━━━━━━━<br/>Simple / Double<br/>Noms des joueurs<br/>Format du match<br/>[ Créer ]"]
+  E2B["<b>ÉCRAN 2b · Rejoindre</b><br/>━━━━━━━━━━━━<br/>Caméra ouverte<br/>Scanner le QR code<br/>du téléphone hôte"]
+
+  E3["<b>ÉCRAN 3 · Connexion et placement</b><br/>━━━━━━━━━━━━<br/>Hôte : affiche le QR code<br/>Téléphones connectés : 0, 1, 2… (Bluetooth ou Wi-Fi)<br/>Accord des joueurs (vidéo locale, supprimée en fin de match)<br/>Aperçu caméra : poser le téléphone au fond du court<br/>Lignes du court détectées ✓ (sinon : toucher les 4 coins)<br/>[ Commencer le match ] · possible seul, sans attendre d'invité<br/><i>d'autres téléphones peuvent rejoindre à tout moment</i>"]
+
+  E4["<b>ÉCRAN 4 · Score</b> (pendant tout le match)<br/>━━━━━━━━━━━━<br/>LÉA • 30<br/>TOM    15<br/>Set 1 · 4/3<br/><i>identique sur tous les téléphones (1 à N)</i><br/>━━━━━━━━━━━━<br/>[ VAR ]   [ Contester score ]"]
+
+  E5["<b>ÉCRAN 5 · Replay</b><br/>s'ouvre sur TOUS les téléphones de la session<br/>━━━━━━━━━━━━<br/>Chacun montre le point joué<br/>depuis son propre point de vue<br/>(après v1.0 : « voir un autre angle » si Wi-Fi)<br/>Ralenti · image par image · zoom<br/>v0.9 : rebonds marqués, suggestion chiffrée<br/>(« 80 % sûr que la balle est sortie »), jamais tranchée<br/>━━━━━━━━━━━━<br/>[ Point Léa ] [ Point Tom ] [ Point rejoué ]<br/>validé par les deux camps<br/>ou ← Retour au score sans changement"]
+
+  E6["<b>ÉCRAN 6 · Corriger le score</b><br/>━━━━━━━━━━━━<br/>Derniers points joués<br/>Proposer le bon score<br/>L'autre camp valide"]
+
+  VOIX(["🎙️ <b>Annonce du serveur</b><br/>« trente quinze »<br/>━━━━━━━━━━━━<br/>Vosk sur chaque téléphone :<br/>voix → texte → score candidat<br/>L'hôte garde une seule version<br/>et l'envoie à tous"])
+  TAP(["👆 <b>v0.1 : tap</b><br/>le gagnant touche sa ligne,<br/>l'autre camp valide"])
+
+  E7["<b>ÉCRAN 7 · Fin de match</b><br/>━━━━━━━━━━━━<br/>Score final<br/>« Les vidéos ont été supprimées »<br/>[ Terminer ]"]
+
+  VOIX -- "v0.3 : score mis à jour<br/>sur tous les écrans" --> E4
+  TAP -- "score mis à jour<br/>sur tous les écrans" --> E4
+  E1 -- "Créer" --> E2A
+  E1 -- "Rejoindre" --> E2B
+  E2A --> E3
+  E2B -- "QR scanné" --> E3
+  E3 --> E4
+  E4 -- "VAR (depuis n'importe quel téléphone)" --> E5
+  E4 -- "Contester score : erreur de score" --> E6
+  E5 -. "résultat décidé par les joueurs,<br/>validé par les 2 camps" .-> E4
+  E5 -. "Retour au score<br/>sans changement" .-> E4
+  E6 -. "validé par les 2 camps" .-> E4
+  E4 -- "Balle de match jouée" --> E7
+  E7 --> E1
+
+  classDef home fill:#3E7A57,stroke:#3E7A57,color:#FFFFFF
+  classDef match fill:#111111,stroke:#E9B44C,stroke-width:3px,color:#FFFFFF
+  classDef var fill:#E9B44C,stroke:#111111,color:#111111
+  classDef std fill:#FFFFFF,stroke:#111111,color:#111111
+  class E1 home
+  class E4 match
+  class E5,E6 var
+  class E2A,E2B,E3,E7 std
+  classDef input fill:#E8F1EC,stroke:#3E7A57,stroke-width:2px,color:#111111
+  class VOIX,TAP input
+```

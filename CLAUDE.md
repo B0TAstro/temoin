@@ -55,26 +55,51 @@ Les libs marquées « candidate » ou non encore testées sur Android doivent ê
 
 ## Architecture
 
-Schémas : `docs/schemas/architecture.png`, `docs/schemas/parcours.png` et `docs/schemas/synchro.png` (voix et VAR entre téléphones).
+Schémas (Mermaid, affichés par GitHub) : `docs/architecture.md`, `docs/parcours.md` et `docs/synchro.md` (voix et VAR entre téléphones). Les PNG pour les slides sont dans `docs/images/`, regénérés par `npm run docs:images` (ou `npm run docs:images -- architecture` pour un seul) : on modifie le `.md`, jamais l'image.
 
 ```
+models/         modèle Vosk (téléchargé par `npm run setup:model`, jamais commité)
+modules/        modules natifs locaux (sound-levels : niveau sonore d'un clip, pour les pics du replay)
+assets/         icon/ (icône, splash) et images/ (images de l'interface) uniquement
 src/
-├── app/        écrans (expo-router)
-├── ui/         composants du design system (voir DESIGN.md)
-├── features/   session, enregistrement, replay, voix, liaison, analyse
-├── adapters/   briques natives derrière une interface (+ versions factices)
-└── core/       TypeScript pur, zéro import React Native, testé sans téléphone
-    ├── score/      machine à états du tennis
-    ├── events/     journal d'événements
-    ├── clips/      file des clips
-    ├── protocol/   messages entre téléphones
-    └── cv/         lignes, balle, rebond, homographie, confiance
+├── app/        routes expo-router, minces : elles lisent leurs paramètres et affichent un écran
+├── features/   une fonctionnalité = un dossier complet, entrée par son index.ts
+│   ├── session/      hôte et invité : journal d'événements, protocole chiffré, BLE, écrans créer / rejoindre / QR
+│   ├── recording/    un fichier par point : file des clips, enregistreur, caméra du match
+│   ├── replay/       VAR : lecteur, panneau de lecture, décisions des joueurs
+│   ├── sound-peaks/  pics sonores d'un clip (resserviront au rebond, v0.9)
+│   ├── voice/        annonce du serveur → score (Vosk)
+│   ├── score/        affichage du score
+│   └── match/        l'écran de match, qui assemble les autres
+├── sports/
+│   └── tennis/       ce qui change d'un sport à l'autre : machine à états du score, libellés, annonces, format du match
+└── shared/     ce qui ne connaît aucun métier
+    ├── ui/           design system (voir `docs/design.md`) : Button, theme, IconButton…
+    ├── lib/          TS pur : base64url
+    └── native/       files, random
 ```
 
-Règles :
-- `core` n'importe jamais React Native ni une lib native.
-- Chaque brique native (caméra, voix, liaison, OpenCV) est derrière une interface, avec une version factice pour les tests.
-- Le score n'est jamais stocké : il est dérivé du journal d'événements.
+Dans une fonctionnalité, toujours les mêmes sous-dossiers :
+```
+features/<nom>/
+├── logic/      TypeScript pur, testé sans téléphone
+├── native/     briques natives derrière une interface (caméra, BLE, Vosk, OpenCV)
+├── ui/         composants et écrans
+├── use*.ts     hooks : la colle entre logic, native et React
+└── index.ts    ce que le reste de l'app a le droit d'utiliser
+```
+**Ajouter une fonctionnalité** (le suivi de balle en v0.5) = ajouter `features/ball-tracking/` avec ces sous-dossiers, puis l'importer depuis l'écran qui s'en sert : `import { useBallTrack } from '@/features/ball-tracking'`. **Ajouter un sport** = ajouter `sports/badminton/` ; il faudra alors une interface commune (créer un match, appliquer un point, afficher le score), aujourd'hui le journal appelle directement le tennis.
+
+Qui appelle qui (exemple, le tap « +1 Léa ») : `features/match/ui/MatchControls` → `dispatch` → `features/session/useHostSession` → `logic/hostLog` valide (`logic/matchLog` → `sports/tennis/stateMachine`) et numérote → `native/ble/BleHost` diffuse à tous → le journal change → `MatchScreen` se ré-affiche → `features/score/ui/ScoreDisplay`.
+
+Règles (imposées par ESLint dans `eslint.config.js`) :
+- **Sens unique** : `app → features → sports → shared`. `shared` ne connaît ni fonctionnalité ni sport ; un sport ne connaît que ses règles.
+- **Pur** : `logic/`, `sports/` et `shared/lib/` n'importent ni React, ni React Native, ni Expo, ni lib native.
+- **Par l'index** : on entre dans une fonctionnalité ou un sport par `@/features/<nom>` ou `@/sports/<nom>`, jamais dans ses fichiers. Dans une fonctionnalité, imports relatifs. Une fonctionnalité peut en utiliser une autre par son index (`match` les assemble toutes, `replay` utilise `recording`, `sound-peaks`, `session`). Limite : un import relatif vers une autre fonctionnalité (`../../autre`) n'est pas détecté, à surveiller en relecture.
+- **Pas de cycle** entre fichiers (`import/no-cycle`), imports triés (`import/order`).
+- **Un fichier = une responsabilité**, un export principal nommé comme lui (`PascalCase` pour composants et classes, `camelCase` pour hooks et fonctions). Un seul `index.ts` par fonctionnalité et par sport, nulle part ailleurs.
+- **Liaison en trois couches** (dans `features/session`) : le protocole (`logic/`, quels messages et dans quel ordre) ne connaît pas le transport ; le transport (`native/Transport.ts`, `HostTransport` / `GuestTransport`) fait passer les messages ; le codec (`logic/SealedCodec.ts`) chiffre chaque message en une ligne de texte ; le format sur le fil (`native/ble/framing.ts`, paquets de 180 octets) est un détail du BLE. Le Wi-Fi (v0.6) ajoute un transport, sans toucher au protocole.
+- Le score n'est jamais stocké : il est dérivé du journal d'événements (`replayLog`).
 
 ### Session : de 1 à N téléphones, une seule architecture
 
@@ -101,12 +126,13 @@ Coût : un événement fait quelques centaines d'octets, la diffusion est propor
 
 ### Liaison : Bluetooth d'abord, Wi-Fi en secours
 
-0. **Un seul téléphone** : transport local, aucune radio utilisée.
+0. **Un seul téléphone** : l'hôte annonce quand même la session en BLE, pour qu'un invité puisse rejoindre à tout moment. Si le Bluetooth est refusé ou indisponible, il passe sur `LocalHost` (aucune radio) et le match continue.
 1. **BLE (prioritaire)** : l'hôte émet, les invités s'y connectent grâce au QR code. Le nombre d'invités qu'un téléphone accepte en BLE dépend du matériel : à mesurer. Au-delà, ou si c'est instable, Wi-Fi.
 2. **Heartbeat** : un ping par seconde. Le lien est jugé instable après plusieurs pongs manqués ou un aller-retour trop long (seuils à régler en test).
 3. **Bascule Wi-Fi** : si le BLE est instable, les téléphones passent sur le Wi-Fi local (Wi-Fi du club ou partage de connexion d'un des téléphones). L'hôte ouvre un petit serveur local, son adresse est dans le QR code. La lib serveur reste à choisir et valider.
 4. **Retour au BLE** quand il redevient stable. Comme les messages sont numérotés, une bascule ne perd rien.
 5. L'état du lien est toujours visible à l'écran (Bluetooth, Wi-Fi ou perdu). Si tout est coupé, chaque téléphone continue de filmer.
+6. **Lien chiffré** : l'hôte tire une clé de session (32 octets, `expo-crypto`) qui n'est que dans le QR code, jamais envoyée par radio. Chaque message est chiffré et signé avec elle (XChaCha20-Poly1305, `@noble/ciphers`, dans `features/session/logic/SealedCodec.ts`) : sans le QR, un téléphone à portée ne lit ni ne modifie le score. Un message déjà reçu (même nonce) est ignoré, et un invité ignore un journal complet plus court que le sien (le journal ne fait que grandir) : on ne peut pas rejouer un vieux message enregistré. `PROTOCOL_VERSION` 2.
 
 ## Enregistrement : le buffer se compte en points
 
@@ -140,7 +166,7 @@ Avec plusieurs téléphones, **chacun fait tourner sa propre reconnaissance**. I
 Avec un seul téléphone, c'est le même chemin avec un seul candidat. Avec plusieurs, le téléphone le plus proche du serveur entend mieux, les autres servent de secours (vent, distance). La grammaire est dérivée de l'état du score, jamais écrite à la main. Point à vérifier en premier : caméra et reconnaissance vocale sur le même micro.
 
 Ce qui est en place en v0.3 :
-- Code du POC voix repris tel quel : `core/score/announce.ts` (formulations attendues), `core/voice/` (normalisation, lexique, similarité, `decide`, grammaire). Son `ScoreListener` n'est pas repris : le journal d'événements tient ce rôle.
+- Code du POC voix repris tel quel : `sports/tennis/announce.ts` (formulations attendues), `features/voice/logic/` (normalisation, lexique, similarité, `decide`, grammaire). Son `ScoreListener` n'est pas repris : le journal d'événements tient ce rôle.
 - Une annonce comprise devient l'événement `point-called { winners, afterSeq }` : le point compte tout de suite (silence du receveur = accord) et le clip est coupé. Pour contester : VAR ou « Annuler le point ».
 - Doublons : `afterSeq` est le dernier événement que le téléphone avait en entendant l'annonce. L'hôte ne l'accepte que si le journal n'a pas bougé depuis : la copie d'un autre téléphone, ou une copie en retard après « Annuler le point », est ignorée. Refusée aussi pendant le VAR. **Simplification** : la première annonce reçue gagne, pas encore de fenêtre « meilleure confiance » entre téléphones.
 - Resynchronisation du POC : un saut de 1 ou 2 points en avant (annonce manquée) est appliqué en un seul événement, sauf si deux ordres des points y mènent (0-0 → 15-15) : l'app ne devine pas qui a gagné le dernier point ; un saut en arrière est affiché, jamais appliqué (on corrige au tap).
@@ -152,8 +178,9 @@ Ce qui est en place en v0.3 :
 - La vidéo enregistre le son (`enableAudio`) si le micro est autorisé, demandé juste après la caméra. Refusé : vidéo muette, rien d'autre ne change.
 - iOS : Vosk forçait la session audio en « enregistrement seul » et la désactivait à l'arrêt, ce qui aurait coupé le son de la vidéo à chaque changement de jeu (Vosk redémarre pour changer de grammaire). Patch `patches/react-native-vosk+2.1.7.patch` (appliqué par `postinstall`) : Vosk rejoint la session lecture + enregistrement de la caméra et ne la désactive plus. Android : rien à changer, CameraX et Vosk lisent le micro en même temps (constaté au premier test, son et voix ensemble).
 - Le replay joue le son à ×1 seulement (étiré au ralenti, il n'aide pas), même téléphone en silencieux.
-- **Pics sonores** : calculés à l'ouverture du VAR, sur le point affiché seulement. Le module natif local `modules/audio-envelope` lit la piste audio du clip (AVAssetReader sur iOS, MediaExtractor + MediaCodec sur Android) et renvoie le volume (RMS) par tranches de 10 ms. `core/audio/peaks.ts` garde les maximums locaux 4 fois au-dessus du fond sonore du clip (la médiane), espacés d'au moins 80 ms. Seuils de départ, à régler sur un vrai court.
+- **Pics sonores** : calculés à l'ouverture du VAR, sur le point affiché seulement. Le module natif local `modules/sound-levels` lit la piste audio du clip (AVAssetReader sur iOS, MediaExtractor + MediaCodec sur Android) et renvoie le niveau sonore (RMS) par tranches de 10 ms. `features/sound-peaks/logic/soundPeaks.ts` garde les maximums locaux 4 fois au-dessus du fond sonore du clip (la médiane), espacés d'au moins 80 ms. Seuils de départ, à régler sur un vrai court.
 - Une marque dit « bruit fort ici », jamais ce que c'était (frappe, rebond, cri, grillage). Les boutons « ◀ Son » / « Son ▶ » mettent en pause 0,15 s avant le pic, pour avancer image par image.
+- **À vérifier sur un vrai court** : (1) iOS lit le son ré-échantillonné à 16 kHz mono, Android à sa fréquence d'origine ; le 16 kHz coupe les aigus au-dessus de 8 kHz, là où est le « clac » d'une frappe : comparer les marques sur le même échange filmé par les deux téléphones. (2) Sur Android, le décodeur AAC ajoute quelques millisecondes de silence au début (priming, ~20 à 45 ms) que `MediaExtractor` ne retire pas : vérifier en image par image que la marque tombe sur l'impact, pas 1 à 3 images après.
 
 ## VAR
 
@@ -196,8 +223,8 @@ npm run typecheck
 npm run lint
 npm run format:check
 
-# Release : passer "version" de app.json et package.json à X.Y.Z, commiter, puis
-git tag vX.Y.Z && git push origin vX.Y.Z      # Android : APK publié par la CI
+# Release : passer "version" de app.json et package.json à X.Y.Z, merger sur main.
+# Android : la CI voit une version sans tag, construit l'APK, crée le tag et la release.
 npx expo run:ios --device --configuration Release   # iOS : build autonome sur l'iPhone branché
 ```
 
@@ -206,7 +233,8 @@ npx expo run:ios --device --configuration Release   # iOS : build autonome sur l
 GitHub Actions, dans `.github/` :
 - **`ci.yml`** (push sur `main` et PR) : format, lint, typecheck, tests, `expo-doctor` ; audit des dépendances livrées (bloque à partir de « high ») et revue des nouvelles dépendances sur les PR ; taille du bundle JS iOS et Android dans le résumé du job.
 - **`pr-build.yml`** : le label `build` sur une PR génère un **APK Android** installable, lien posté en commentaire.
-- **`release.yml`** : un tag `vX.Y.Z` (égal à la version de `app.json`) publie une release GitHub avec l'APK. Lançable aussi à la main sur un tag existant.
+- **`release.yml`** (push sur `main`) : si la version de `package.json` (égale à celle de `app.json`, sinon échec) n'a pas encore de tag, construit l'APK puis crée le tag `vX.Y.Z` et la release GitHub. Une version déjà taguée ne fait rien. Une version `X.Y.Z-quelquechose` sort en pré-release. Relançable à la main (après un build raté, par exemple).
+- **Actions partagées** (`.github/actions/`) : `setup` (Node + `npm ci`) et `build-android` (APK, modèle Vosk en cache).
 - **iOS** n'est pas construit en CI : un build installable demande un compte Apple Developer payant. La release iOS se fait en local (voir Commandes).
 
 ## Conventions

@@ -54,12 +54,12 @@ Each version adds a building block without breaking the previous one. Each versi
 
 - **Expo** (development build) + **React Native** + **TypeScript**, iOS and Android, mixed sessions supported
 - **react-native-vision-camera** for recording, **react-native-video** for replay
-- A small native module (`modules/audio-envelope`, AVFoundation on iOS, MediaCodec on Android) reads a clip's sound to mark its peaks
+- A small native module (`modules/sound-levels`, AVFoundation on iOS, MediaCodec on Android) reads a clip's sound to mark its peaks
 - **Vosk** (`vosk-model-small-fr-0.22`) for offline French speech to text, with a grammar constrained by the score state
 - **Bluetooth Low Energy** between phones, local Wi-Fi as automatic fallback
 - **OpenCV** (via `react-native-fast-opencv`) for pixels, geometry (homography, Kalman filter, bounce detection) in pure TypeScript
 
-Architecture, conventions and design system: [`CLAUDE.md`](CLAUDE.md), [`DESIGN.md`](DESIGN.md), [`docs/schemas`](docs/schemas).
+Architecture, conventions and design system: [`CLAUDE.md`](CLAUDE.md), [`docs/design.md`](docs/design.md), diagrams in [`docs/`](docs).
 
 ## Getting started
 

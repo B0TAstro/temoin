@@ -1,11 +1,11 @@
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button } from '@/ui/Button';
-import { colors } from '@/ui/theme';
+import { Button } from '@/shared/ui/Button';
+import { colors } from '@/shared/ui/theme';
 
-/** Home: two big buttons, nothing else (DESIGN §5.1). */
+/** Home: two big buttons, nothing else (design.md §5.1). */
 export default function Home() {
   return (
     <SafeAreaView style={styles.screen}>
@@ -24,11 +24,6 @@ export default function Home() {
           onPress={() => router.push('/join')}
         />
       </View>
-
-      {/* Spike screen, reachable in release builds too so the PR APK can run it on Android. */}
-      <Link href="/dev/recorder" style={styles.devLink}>
-        Test enregistreur
-      </Link>
     </SafeAreaView>
   );
 }
@@ -43,6 +38,5 @@ const styles = StyleSheet.create({
   header: { marginTop: 48, gap: 8 },
   title: { color: colors.line, fontSize: 56, fontWeight: '800' },
   subtitle: { color: colors.lineDim, fontSize: 20 },
-  actions: { gap: 16 },
-  devLink: { color: colors.lineDim, fontSize: 16, textAlign: 'center', padding: 16 },
+  actions: { gap: 16, marginBottom: 48 },
 });
