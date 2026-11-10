@@ -39,13 +39,16 @@ export function useHostSession(sessionId: string, key: string, form: SetupForm):
   useEffect(() => {
     const bytes = decodeSessionKey(key);
     if (!bytes) throw new Error('Invalid session key');
-    const codec = new SealedCodec<GuestMessage, HostMessage<SetupForm>>(bytes, randomBytes);
+    const codec = new SealedCodec<GuestMessage, HostMessage<SetupForm>>(bytes, randomBytes, 'host');
     const ble = new BleHost<GuestMessage, HostMessage<SetupForm>>(
       sessionId,
       codec,
       (message) => {
         if (message.t === 'intent') dispatch(message.event);
-        else ble.broadcast({ t: 'snapshot', setup: form, log: [...hostLog.events] });
+        else if (message.t === 'sync') {
+          ble.broadcast({ t: 'snapshot', setup: form, log: [...hostLog.events] });
+        }
+        // anything else is not a guest message: ignored
       },
       setGuests,
     );

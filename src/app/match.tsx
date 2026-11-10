@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
 
 import { randomBytes } from '@/adapters/random';
-import { newSessionKey } from '@/core/protocol/joinLink';
+import { newSessionKey, toSession } from '@/core/protocol/joinLink';
 import { MatchScreen } from '@/features/match/MatchScreen';
 import { decodeForm } from '@/features/session/setup';
 import { useGuestSession } from '@/features/session/useGuestSession';
@@ -15,10 +15,26 @@ import { useOrientation } from '@/ui/orientation';
 export default function MatchRoute() {
   useOrientation('landscape');
   const params = useLocalSearchParams<{ role?: string; s?: string; k?: string; form?: string }>();
-  if (params.role === 'guest' && params.s && params.k) {
-    return <GuestMatch sessionId={params.s} sessionKey={params.k} />;
+  // The route can be opened from any temoin://match link: check it before the session starts.
+  if (params.role === 'guest') {
+    const join = toSession(params.s, params.k);
+    if (!join) return <InvalidLink />;
+    return <GuestMatch sessionId={join.sessionId} sessionKey={join.key} />;
   }
-  return <HostMatch sessionId={params.s ?? 'SOLO'} sessionKey={params.k} rawForm={params.form} />;
+  const sessionId = params.s ?? 'SOLO';
+  if (params.k !== undefined && !toSession(sessionId, params.k)) return <InvalidLink />;
+  return <HostMatch sessionId={sessionId} sessionKey={params.k} rawForm={params.form} />;
+}
+
+function InvalidLink() {
+  return (
+    <MessageScreen
+      message="Lien de session invalide."
+      hint="Créez une session, ou scannez le QR code de l’hôte."
+    >
+      <Button label="Accueil" variant="outline" onPress={() => router.replace('/')} />
+    </MessageScreen>
+  );
 }
 
 function HostMatch({

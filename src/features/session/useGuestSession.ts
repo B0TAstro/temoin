@@ -26,7 +26,11 @@ export function useGuestSession(sessionId: string, key: string): Session {
   useEffect(() => {
     const bytes = decodeSessionKey(key);
     if (!bytes) throw new Error('Invalid session key');
-    const codec = new SealedCodec<HostMessage<SetupForm>, GuestMessage>(bytes, randomBytes);
+    const codec = new SealedCodec<HostMessage<SetupForm>, GuestMessage>(
+      bytes,
+      randomBytes,
+      'guest',
+    );
     const ble = new BleGuest<HostMessage<SetupForm>, GuestMessage>(
       sessionId,
       codec,
@@ -34,10 +38,12 @@ export function useGuestSession(sessionId: string, key: string): Session {
         if (message.t === 'snapshot') {
           setForm(message.setup);
           logRef.current = receiveSnapshot(logRef.current, message.log);
-        } else {
+        } else if (message.t === 'event') {
           const received = receiveEvent(logRef.current, message.event);
           if (received.gap) ble.send({ t: 'sync' });
           logRef.current = received.log;
+        } else {
+          return; // not a host message: ignored
         }
         setLog(logRef.current);
       },
