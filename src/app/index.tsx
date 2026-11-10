@@ -2,8 +2,8 @@ import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button } from '@/ui/Button';
-import { colors } from '@/ui/theme';
+import { Button } from '@/shared/ui/Button';
+import { colors } from '@/shared/ui/theme';
 
 /** Home: two big buttons, nothing else (design.md §5.1). */
 export default function Home() {

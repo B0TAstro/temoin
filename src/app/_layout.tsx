@@ -2,8 +2,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { useOrientation } from '@/ui/orientation';
-import { colors } from '@/ui/theme';
+import { useOrientation } from '@/shared/ui/orientation';
+import { colors } from '@/shared/ui/theme';
 
 export default function RootLayout() {
   useOrientation('portrait');

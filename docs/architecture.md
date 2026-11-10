@@ -1,6 +1,6 @@
 # Architecture
 
-Ce qui tourne sur chaque téléphone en **v0.4**, et ce qui circule entre eux. En pointillé : prévu, pas encore construit. Un téléphone seul est un hôte sans invité : même code de 1 à N téléphones. Le détail des dossiers et des règles est dans [`CLAUDE.md`](../CLAUDE.md#architecture).
+Ce qui tourne sur chaque téléphone en **v0.4**, et ce qui circule entre eux. En pointillé : prévu, pas encore construit. Un téléphone seul est un hôte sans invité : même code de 1 à N téléphones. Chaque fonctionnalité range sa logique dans `logic/` et ses briques natives dans `native/` ; le détail des dossiers et des règles est dans [`CLAUDE.md`](../CLAUDE.md#architecture).
 
 Image pour les slides : [`images/architecture.png`](images/architecture.png) (`npm run docs:images` la regénère depuis ce fichier).
 
@@ -10,10 +10,10 @@ flowchart LR
   subgraph A["📱 Téléphone HÔTE · crée la session · suffit seul pour jouer"]
     direction TB
     A_UI["<b>Écrans</b><br/>Accueil · Créer · Rejoindre · Match · Replay"]
-    A_F["<b>Fonctionnalités</b><br/>Match · Session · Enregistrement · Replay · Voix · Score"]
-    subgraph A_CORE["Cœur métier · TypeScript pur, testé sans téléphone"]
+    A_F["<b>Fonctionnalités</b> · features/<br/>Match · Session · Enregistrement · Replay · Pics sonores · Voix · Score"]
+    subgraph A_CORE["Logique · TypeScript pur, testé sans téléphone · logic/ et sports/tennis"]
       direction LR
-      A_S["Score<br/>machine à états"]
+      A_S["Score du tennis<br/>machine à états<br/><i>sports/tennis</i>"]
       A_J["Journal<br/>d'événements<br/><i>référence</i><br/>le score en est dérivé"]
       A_P["Protocole<br/>l'hôte valide et numérote<br/>🔒 messages chiffrés<br/>avec la clé du QR"]
       A_C["File des clips<br/>3 points : en cours<br/>+ 2 précédents"]
@@ -21,7 +21,7 @@ flowchart LR
       A_SO["Son<br/>pics sonores"]
       A_V["Vision<br/>court, balle,<br/>rebond, confiance<br/><i>v0.5+</i>"]
     end
-    subgraph A_NAT["Briques natives · derrière une interface"]
+    subgraph A_NAT["Briques natives · native/, derrière une interface"]
       direction LR
       A_CAM["Caméra + son<br/>VisionCamera"]
       A_MIC["Voix<br/>Vosk FR"]
@@ -39,7 +39,7 @@ flowchart LR
     direction TB
     B_UI["<b>Écrans</b><br/>les mêmes"]
     B_F["<b>Fonctionnalités</b><br/>les mêmes"]
-    B_CORE["Cœur métier<br/>copie du journal<br/>envoie ses intentions à l'hôte<br/>(tap, annonce entendue, VAR)"]
+    B_CORE["Logique<br/>copie du journal<br/>envoie ses intentions à l'hôte<br/>(tap, annonce entendue, VAR)"]
     B_NAT["Caméra · Voix · Liaison"]
     B_DISK[("Stockage local<br/>ses propres clips")]
     B_UI --> B_F --> B_CORE

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
-import { type LoggedEvent, type MatchSetup, replay } from '@/core/events/matchLog';
-import { scoreLabel } from '@/core/score/labels';
+import { type LoggedEvent, replayLog } from '@/features/session';
+import { type MatchSetup, scoreLabel } from '@/sports/tennis';
 
 import type { ClipRecorder } from './ClipRecorder';
 
@@ -20,7 +20,7 @@ export function useClipsFromLog(
     for (let i = processed.current; i < log.length; i++) {
       const event = log[i];
       if (event?.type === 'point-proposed' || event?.type === 'point-called') {
-        const before = replay(setup, log.slice(0, i));
+        const before = replayLog(setup, log.slice(0, i));
         clips.endPoint({ pointIndex: before.points.length, label: scoreLabel(before.state) });
       } else if (event?.type === 'point-rejected') {
         clips.retract();

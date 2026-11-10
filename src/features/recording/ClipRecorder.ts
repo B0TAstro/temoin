@@ -1,9 +1,10 @@
 import type { CameraVideoOutput } from 'react-native-vision-camera';
 
-import { MAX_POINT_SECONDS, SegmentRecorder } from '@/adapters/camera/SegmentRecorder';
-import { deleteFile } from '@/adapters/files';
-import { type Clip, ClipQueue, type PointSnapshot } from '@/core/clips/ClipQueue';
-import type { Segment } from '@/core/clips/Segment';
+import { deleteFile } from '@/shared/native/files';
+
+import { type Clip, ClipQueue, type PointSnapshot } from './logic/ClipQueue';
+import type { Segment } from './logic/Segment';
+import { MAX_POINT_SECONDS, SegmentRecorder } from './native/SegmentRecorder';
 
 /** Finished points kept on disk, on top of the point being recorded: 3 points in all. */
 export const MAX_SAVED_POINTS = 2;
