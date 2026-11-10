@@ -4,8 +4,14 @@ import { useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { MatchView } from '@/core/events/matchLog';
-import { outcomeEvents } from '@/core/events/outcome';
+import {
+  decodeForm,
+  InviteOverlay,
+  linkLabel,
+  type MatchView,
+  type Session,
+} from '@/features/session';
+import { outcomeEvents } from '@/features/replay/logic/outcome';
 import { sideName, toMatchSetup } from '@/sports/tennis';
 import { useAppActive } from '@/features/recording/useAppActive';
 import { useClipRecorder } from '@/features/recording/useClipRecorder';
@@ -13,10 +19,6 @@ import { useClipsFromLog } from '@/features/recording/useClipsFromLog';
 import { ReplayScreen } from '@/features/replay/ReplayScreen';
 import { useVarReplay } from '@/features/replay/useVarReplay';
 import { ScoreDisplay } from '@/features/score/ScoreDisplay';
-import { InviteOverlay } from '@/features/session/InviteOverlay';
-import { linkLabel } from '@/features/session/linkLabel';
-import type { Session } from '@/features/session/Session';
-import { decodeForm } from '@/features/session/setup';
 import { useVoice } from '@/features/voice/useVoice';
 import { heardLine } from '@/features/voice/voiceLabels';
 import { Button } from '@/shared/ui/Button';

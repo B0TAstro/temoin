@@ -1,4 +1,4 @@
-import type { LoggedEvent, MatchEvent } from '@/core/events/matchLog';
+import type { LoggedEvent, MatchEvent } from './matchLog';
 
 /**
  * Messages between phones. Star topology: guests only talk to the host. Never any video.

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { Segment } from '@/core/clips/Segment';
-import type { ReplayOutcome } from '@/core/events/outcome';
+import type { ReplayOutcome } from './logic/outcome';
 import { colors } from '@/shared/ui/theme';
 
 import { ClipPlayer } from './ClipPlayer';

@@ -1,4 +1,4 @@
-import { isValid, type LoggedEvent, type MatchEvent, replay } from '@/core/events/matchLog';
+import { isValid, type LoggedEvent, type MatchEvent, replayLog } from './matchLog';
 import type { MatchSetup } from '@/sports/tennis';
 
 /**
@@ -17,7 +17,7 @@ export class HostLog {
 
   /** The event, numbered and added to the log; null when it changes nothing (stale, invalid). */
   receive(event: MatchEvent): LoggedEvent | null {
-    if (!isValid(replay(this.setup, this.log), event)) return null;
+    if (!isValid(replayLog(this.setup, this.log), event)) return null;
     const logged = { ...event, seq: this.log.length + 1 } as LoggedEvent;
     this.log = [...this.log, logged];
     return logged;

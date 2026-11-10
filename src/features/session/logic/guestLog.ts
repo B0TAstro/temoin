@@ -1,4 +1,4 @@
-import type { LoggedEvent } from '@/core/events/matchLog';
+import type { LoggedEvent } from './matchLog';
 
 export type Received = {
   log: readonly LoggedEvent[];

@@ -1,12 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
 
-import { randomBytes } from '@/shared/native/random';
-import { newSessionKey } from '@/core/protocol/joinLink';
 import { MatchScreen } from '@/features/match/MatchScreen';
-import { decodeForm } from '@/features/session/setup';
-import { useGuestSession } from '@/features/session/useGuestSession';
-import { useHostSession } from '@/features/session/useHostSession';
+import { decodeForm, newSession, useGuestSession, useHostSession } from '@/features/session';
 import { Button } from '@/shared/ui/Button';
 import { MessageScreen } from '@/shared/ui/MessageScreen';
 import { useOrientation } from '@/shared/ui/orientation';
@@ -31,7 +27,7 @@ function HostMatch({
   rawForm: string | undefined;
 }) {
   const form = useMemo(() => decodeForm(rawForm), [rawForm]);
-  const key = useMemo(() => sessionKey ?? newSessionKey(randomBytes), [sessionKey]);
+  const key = useMemo(() => sessionKey ?? newSession().key, [sessionKey]);
   const session = useHostSession(sessionId, key, form);
   if (!session.view) return null;
   return <MatchScreen session={{ ...session, view: session.view }} />;

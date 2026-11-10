@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { buildJoinLink } from '@/core/protocol/joinLink';
+import { buildJoinLink } from '../logic/joinLink';
 import { Button } from '@/shared/ui/Button';
 import { QrCode } from '@/shared/ui/QrCode';
 import { colors } from '@/shared/ui/theme';

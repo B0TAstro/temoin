@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import type { LoggedEvent, MatchView } from '@/core/events/matchLog';
+import type { LoggedEvent, MatchView } from '@/features/session';
 import type { ClipRecorder } from '@/features/recording/ClipRecorder';
 
 import { type ReplayClips, toReplayClips } from './toReplayClips';

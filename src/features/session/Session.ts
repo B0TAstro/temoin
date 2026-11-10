@@ -1,5 +1,5 @@
-import type { LinkStatus } from '@/adapters/link/Transport';
-import type { LoggedEvent, MatchEvent, MatchView } from '@/core/events/matchLog';
+import type { LinkStatus } from './native/Transport';
+import type { LoggedEvent, MatchEvent, MatchView } from './logic/matchLog';
 
 import type { SetupForm } from '@/sports/tennis';
 

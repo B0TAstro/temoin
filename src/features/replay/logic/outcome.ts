@@ -1,6 +1,6 @@
 import type { SideId } from '@/sports/tennis';
 
-import type { MatchEvent, MatchView } from './matchLog';
+import type { MatchEvent, MatchView } from '@/features/session';
 
 /** What the players decided, looking at the replay. The app never decides. */
 export type ReplayOutcome = { kind: 'point'; winner: SideId } | { kind: 'replayed' };

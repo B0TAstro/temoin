@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { BleGuest } from '@/adapters/link/ble/BleGuest';
-import type { GuestTransport, LinkStatus } from '@/adapters/link/Transport';
-import { type LoggedEvent, type MatchEvent, replay } from '@/core/events/matchLog';
+import { BleGuest } from './native/ble/BleGuest';
+import type { GuestTransport, LinkStatus } from './native/Transport';
+import { type LoggedEvent, type MatchEvent, replayLog } from './logic/matchLog';
 import { randomBytes } from '@/shared/native/random';
-import { receiveEvent, receiveSnapshot } from '@/core/protocol/guestLog';
-import { decodeSessionKey } from '@/core/protocol/joinLink';
-import type { GuestMessage, HostMessage } from '@/core/protocol/messages';
-import { SealedCodec } from '@/core/protocol/SealedCodec';
+import { receiveEvent, receiveSnapshot } from './logic/guestLog';
+import { decodeSessionKey } from './logic/joinLink';
+import type { GuestMessage, HostMessage } from './logic/messages';
+import { SealedCodec } from './logic/SealedCodec';
 
 import type { Session } from './Session';
 import { type SetupForm, toMatchSetup } from '@/sports/tennis';
@@ -60,7 +60,7 @@ export function useGuestSession(sessionId: string, key: string): Session {
   }, []);
 
   const setup = useMemo(() => (form ? toMatchSetup(form) : undefined), [form]);
-  const view = useMemo(() => (setup ? replay(setup, log) : undefined), [setup, log]);
+  const view = useMemo(() => (setup ? replayLog(setup, log) : undefined), [setup, log]);
   return {
     role: 'guest',
     sessionId,

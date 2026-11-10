@@ -1,6 +1,6 @@
 import { Alert, StyleSheet } from 'react-native';
 
-import type { MatchEvent, MatchView } from '@/core/events/matchLog';
+import type { MatchEvent, MatchView } from '@/features/session';
 import { type SideId, sideName } from '@/sports/tennis';
 import { PendingBanner } from '@/features/score/PendingBanner';
 import { Button } from '@/shared/ui/Button';

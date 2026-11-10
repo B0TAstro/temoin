@@ -50,7 +50,7 @@ export type MatchView = {
 };
 
 /** Replays the log into the score. Pure: the same log always gives the same score. */
-export function replay(setup: MatchSetup, log: readonly LoggedEvent[]): MatchView {
+export function replayLog(setup: MatchSetup, log: readonly LoggedEvent[]): MatchView {
   const points: SideId[] = [];
   let pending: SideId | undefined;
   let varOpen = false;
