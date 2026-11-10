@@ -1,6 +1,14 @@
-import type { ClipsForReplay } from '@/features/recording';
+import type { ClipsForReplay, Segment } from '@/features/recording';
 
-import type { ReplayClip } from './ReplayScreen';
+/** One point of the replay. */
+export type ReplayClip = {
+  key: string;
+  /** E.g. "Set 1 · Jeu 4 · 30-15". */
+  title: string;
+  /** E.g. "Dernier point", "Point en cours". */
+  subtitle: string;
+  segments: readonly Segment[];
+};
 
 export type ReplayClips = { clips: ReplayClip[]; initialIndex: number };
 

@@ -1,22 +1,14 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { Segment } from '@/features/recording';
-import type { ReplayOutcome } from './logic/outcome';
 import { colors } from '@/shared/ui/theme';
+
+import type { ReplayOutcome } from '../logic/outcome';
+import type { ReplayClip } from '../logic/toReplayClips';
 
 import { ClipPlayer } from './ClipPlayer';
 import { OutcomeBar, type Side } from './OutcomeBar';
 import { NavButton } from './ReplayButtons';
-
-export type ReplayClip = {
-  key: string;
-  /** E.g. "Set 1 · Jeu 4 · 30-15". */
-  title: string;
-  /** E.g. "Dernier point", "Point en cours". */
-  subtitle: string;
-  segments: readonly Segment[];
-};
 
 type Props = {
   /** Oldest first: "◀" goes back in time. */

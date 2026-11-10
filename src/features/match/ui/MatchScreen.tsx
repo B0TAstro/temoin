@@ -11,7 +11,7 @@ import {
   type MatchView,
   type Session,
 } from '@/features/session';
-import { outcomeEvents } from '@/features/replay/logic/outcome';
+import { outcomeEvents, ReplayScreen, useVarReplay } from '@/features/replay';
 import { sideName, toMatchSetup } from '@/sports/tennis';
 import {
   TARGET_FPS,
@@ -20,9 +20,7 @@ import {
   useClipsFromLog,
   useMatchCamera,
 } from '@/features/recording';
-import { ReplayScreen } from '@/features/replay/ReplayScreen';
-import { useVarReplay } from '@/features/replay/useVarReplay';
-import { ScoreDisplay } from '@/features/score/ScoreDisplay';
+import { ScoreDisplay } from '@/features/score';
 import { heardLine, useVoice } from '@/features/voice';
 import { Button } from '@/shared/ui/Button';
 import { MessageScreen } from '@/shared/ui/MessageScreen';

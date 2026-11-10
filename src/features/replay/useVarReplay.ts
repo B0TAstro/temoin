@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { LoggedEvent, MatchView } from '@/features/session';
 import type { ClipRecorder } from '@/features/recording';
 
-import { type ReplayClips, toReplayClips } from './toReplayClips';
+import { type ReplayClips, toReplayClips } from './logic/toReplayClips';
 
 /** `forSeq`: the var-opened event these clips were frozen for. */
 type Frozen = ReplayClips & { forSeq: number };
