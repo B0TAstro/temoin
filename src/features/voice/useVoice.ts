@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { VoskEngine } from '@/adapters/voice/VoskEngine';
+import { VoskEngine } from './native/VoskEngine';
 import { type MatchState, scoreLabel, type SideId, sideName } from '@/sports/tennis';
-import { staticGrammar } from '@/core/voice/grammar';
-import { decide, pointsBetween } from '@/core/voice/match';
+import { staticGrammar } from './logic/grammar';
+import { decide, pointsBetween } from './logic/match';
 
 export type VoiceStatus = 'off' | 'starting' | 'listening' | 'error';
 

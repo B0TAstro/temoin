@@ -4,14 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Video, { type VideoRef } from 'react-native-video';
 
 import { toUri } from '@/shared/native/files';
-import { stopBeforePeak } from '@/core/sound/soundPeaks';
-import type { Segment } from '@/core/clips/Segment';
-import { buildTimeline, locate } from '@/core/clips/timeline';
+import { stopBeforePeak, useSoundPeaks } from '@/features/sound-peaks';
+import { buildTimeline, locate, type Segment } from '@/features/recording';
 import { colors, radius, touch } from '@/shared/ui/theme';
 import { ZoomableView } from '@/shared/ui/ZoomableView';
 
 import { PlaybackPanel } from './PlaybackPanel';
-import { useSoundPeaks } from './useSoundPeaks';
 
 const DEFAULT_RATE = 0.5;
 /** Where a point opens, in seconds before its end (the end is what players argue about). */

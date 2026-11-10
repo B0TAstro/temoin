@@ -9,7 +9,7 @@ import {
 } from 'react-native-vision-camera';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { useFpsMeter } from '@/features/recording/useFpsMeter';
+import { useFpsMeter } from './useFpsMeter';
 
 export const TARGET_FPS = 60;
 const TARGET_BIT_RATE = 10_000_000;

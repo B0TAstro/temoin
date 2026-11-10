@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { Segment } from '@/core/clips/Segment';
+import type { Segment } from '@/features/recording';
 import type { ReplayOutcome } from './logic/outcome';
 import { colors } from '@/shared/ui/theme';
 

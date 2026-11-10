@@ -1,4 +1,4 @@
-import type { ClipsForReplay } from '@/features/recording/ClipRecorder';
+import type { ClipsForReplay } from '@/features/recording';
 
 import type { ReplayClip } from './ReplayScreen';
 

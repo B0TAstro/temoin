@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
-import { readSoundLevels } from '@/adapters/sound/readSoundLevels';
-import { findSoundPeaks, LEVEL_WINDOW_MS } from '@/core/sound/soundPeaks';
-import type { Timeline } from '@/core/clips/timeline';
+import { readSoundLevels } from './native/readSoundLevels';
+import { findSoundPeaks, LEVEL_WINDOW_MS } from './logic/soundPeaks';
+import type { Timeline } from '@/features/recording';
 
 /**
  * The sound peaks of the point on screen, on its replay timeline. Read when the replay opens, for

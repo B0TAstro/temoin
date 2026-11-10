@@ -13,14 +13,17 @@ import {
 } from '@/features/session';
 import { outcomeEvents } from '@/features/replay/logic/outcome';
 import { sideName, toMatchSetup } from '@/sports/tennis';
-import { useAppActive } from '@/features/recording/useAppActive';
-import { useClipRecorder } from '@/features/recording/useClipRecorder';
-import { useClipsFromLog } from '@/features/recording/useClipsFromLog';
+import {
+  TARGET_FPS,
+  useAppActive,
+  useClipRecorder,
+  useClipsFromLog,
+  useMatchCamera,
+} from '@/features/recording';
 import { ReplayScreen } from '@/features/replay/ReplayScreen';
 import { useVarReplay } from '@/features/replay/useVarReplay';
 import { ScoreDisplay } from '@/features/score/ScoreDisplay';
-import { useVoice } from '@/features/voice/useVoice';
-import { heardLine } from '@/features/voice/voiceLabels';
+import { heardLine, useVoice } from '@/features/voice';
 import { Button } from '@/shared/ui/Button';
 import { MessageScreen } from '@/shared/ui/MessageScreen';
 import { colors } from '@/shared/ui/theme';
@@ -28,7 +31,6 @@ import { colors } from '@/shared/ui/theme';
 import { MatchControls, type MatchTab } from './MatchControls';
 import { MatchSidebar } from './MatchSidebar';
 import { TrainingPanel } from './TrainingPanel';
-import { TARGET_FPS, useMatchCamera } from './useMatchCamera';
 
 /**
  * The match, in landscape: the camera and the session on the left, the score in the middle, the
