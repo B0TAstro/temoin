@@ -4,14 +4,11 @@ import { Camera, type CameraDevice, type CameraSessionConfig } from 'react-nativ
 import { type MatchCamera, TARGET_FPS } from '@/features/recording';
 import { VOICE_LABEL, type VoiceStatus } from '@/features/voice';
 import { IconButton } from '@/shared/ui/IconButton';
-import { TabButton } from '@/shared/ui/TabButton';
 import { colors, radius } from '@/shared/ui/theme';
-
-import type { MatchTab } from './MatchControls';
 
 /**
  * The left column: the camera preview, what the phone is doing (recording, link, voice), the
- * session settings and the tabs.
+ * session settings.
  */
 export function MatchSidebar({
   camera,
@@ -25,8 +22,6 @@ export function MatchSidebar({
   onToggleVoice,
   onInvite,
   onLeave,
-  tab,
-  onTab,
 }: {
   camera: MatchCamera;
   device: CameraDevice;
@@ -40,8 +35,6 @@ export function MatchSidebar({
   /** Host only: shows the QR code. */
   onInvite: (() => void) | undefined;
   onLeave: () => void;
-  tab: MatchTab;
-  onTab: (tab: MatchTab) => void;
 }) {
   return (
     <>
@@ -85,22 +78,6 @@ export function MatchSidebar({
         />
         <IconButton icon="exit-outline" label="Quitter le match" onPress={onLeave} />
       </View>
-      <View style={styles.tabs}>
-        <TabButton
-          label="Score"
-          icon="tennisball"
-          inactiveIcon="tennisball-outline"
-          active={tab === 'score'}
-          onPress={() => onTab('score')}
-        />
-        <TabButton
-          label="Entraînement"
-          icon="barbell"
-          inactiveIcon="barbell-outline"
-          active={tab === 'training'}
-          onPress={() => onTab('training')}
-        />
-      </View>
     </>
   );
 }
@@ -118,5 +95,4 @@ const styles = StyleSheet.create({
   statusText: { color: colors.line, fontSize: 15 },
   listening: { color: colors.ball },
   tools: { flexDirection: 'row', justifyContent: 'space-between' },
-  tabs: { flexDirection: 'row' },
 });

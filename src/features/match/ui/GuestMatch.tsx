@@ -6,7 +6,7 @@ import { MessageScreen } from '@/shared/ui/MessageScreen';
 
 import { MatchScreen } from './MatchScreen';
 
-/** A phone that scanned the QR code: waits for the host's log, then shows the same match. */
+/** A phone that scanned the QR code: waits for the host's log, then shows the same match */
 export function GuestMatch({ sessionId, sessionKey }: { sessionId: string; sessionKey: string }) {
   const session = useGuestSession(sessionId, sessionKey);
   if (!session.view || !session.form) {
@@ -17,7 +17,7 @@ export function GuestMatch({ sessionId, sessionKey }: { sessionId: string; sessi
             ? 'Connexion à l’hôte…'
             : `Recherche de la session ${sessionId}…`
         }
-        hint="Gardez les deux téléphones proches, Bluetooth activé."
+        hint="Gardez les deux téléphones proches avec le Bluetooth activé."
       >
         <Button label="Annuler" variant="outline" onPress={() => router.replace('/')} />
       </MessageScreen>

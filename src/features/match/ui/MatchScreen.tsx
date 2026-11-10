@@ -20,14 +20,11 @@ import { MessageScreen } from '@/shared/ui/MessageScreen';
 import { colors } from '@/shared/ui/theme';
 import { sideName, toMatchSetup } from '@/sports/tennis';
 
-import { MatchControls, type MatchTab } from './MatchControls';
+import { DevStats } from './DevStats';
+import { MatchControls } from './MatchControls';
 import { MatchSidebar } from './MatchSidebar';
-import { TrainingPanel } from './TrainingPanel';
 
-/**
- * The match, in landscape: the camera and the session on the left, the score in the middle, the
- * match buttons on the right, under the thumb. The same screen on the host and on a guest.
- */
+
 export function MatchScreen({ session }: { session: MatchSession }) {
   const { view, dispatch, log } = session;
   const { state } = view;
@@ -37,19 +34,17 @@ export function MatchScreen({ session }: { session: MatchSession }) {
   useKeepAwake(); // otherwise the screen locks and the OS stops the camera
   const camera = useMatchCamera();
   const appActive = useAppActive();
-  const [tab, setTab] = useState<MatchTab>('score');
   const [showQr, setShowQr] = useState(false);
   const [voiceOn, setVoiceOn] = useState(true);
 
-  // Recording pauses during the replay, to spare the phone (heat, battery).
+  // Recording pauses during the replay, to spare the phone (heat, battery)
   const matchOver = state.matchWonBy !== undefined;
   const cameraActive = !view.varOpen && appActive && !matchOver;
   const { stats, clips } = useClipRecorder(camera.videoOutput, camera.running && cameraActive);
   useClipsFromLog(log, setup, clips);
   const replay = useVarReplay(view, log, clips);
 
-  // The voice listens while the camera films. Not during the replay: the players talking in front
-  // of it must not count a point.
+  // The voice listens while the camera films. Not during the replay: the players talking in front of it must not count a point
   const voice = useVoice({
     state,
     enabled: voiceOn && camera.running && cameraActive,
@@ -100,24 +95,20 @@ export function MatchScreen({ session }: { session: MatchSession }) {
             onToggleVoice={() => setVoiceOn(!voiceOn)}
             onInvite={session.role === 'host' ? () => setShowQr(true) : undefined}
             onLeave={leave}
-            tab={tab}
-            onTab={setTab}
           />
         </View>
 
         <View style={styles.middle}>
-          {tab === 'score' ? (
-            <View style={styles.board}>
-              <ScoreDisplay state={state} />
-              {heard !== null && (
-                <Text style={styles.heard} numberOfLines={1}>
-                  {heard}
-                </Text>
-              )}
-            </View>
-          ) : (
-            <TrainingPanel
-              state={state}
+          <View style={styles.board}>
+            <ScoreDisplay state={state} />
+            {heard !== null && (
+              <Text style={styles.heard} numberOfLines={1}>
+                {heard}
+              </Text>
+            )}
+          </View>
+          {__DEV__ && (
+            <DevStats
               fps={camera.fps}
               selectedFps={camera.selectedFps}
               stats={stats}
@@ -129,12 +120,7 @@ export function MatchScreen({ session }: { session: MatchSession }) {
         </View>
 
         <View style={styles.side}>
-          <MatchControls
-            view={view}
-            tab={tab}
-            opening={view.varOpen && !replay}
-            dispatch={dispatch}
-          />
+          <MatchControls view={view} opening={view.varOpen && !replay} dispatch={dispatch} />
         </View>
       </SafeAreaView>
 
@@ -155,8 +141,7 @@ export function MatchScreen({ session }: { session: MatchSession }) {
             { id: a.id, name: sideName(state, a.id) },
             { id: b.id, name: sideName(state, b.id) },
           ]}
-          // The players decided: the outcome goes to the log, then every phone goes back to the
-          // score.
+          // The players decided: the outcome goes to the log, then every phone goes back to the score
           onOutcome={(outcome) => outcomeEvents(view, outcome).forEach(dispatch)}
           onClose={() => dispatch({ type: 'var-closed' })}
         />

@@ -6,21 +6,16 @@ import { Button } from '@/shared/ui/Button';
 import { touch } from '@/shared/ui/theme';
 import { type SideId, sideName } from '@/sports/tennis';
 
-export type MatchTab = 'score' | 'training';
-
 /**
- * The match buttons, under the thumb: who won the point (or confirm the proposed one), VAR, and
- * "Annuler le point".
+ * The match buttons, under the thumb: who won the point (or confirm the proposed one), VAR, and "Annuler le point"
  */
 export function MatchControls({
   view,
-  tab,
   opening,
   dispatch,
 }: {
   view: MatchView;
-  tab: MatchTab;
-  /** VAR pressed, the clips are still being written. */
+  /** When VAR pressed, the clips are still being written */
   opening: boolean;
   dispatch: (event: MatchEvent) => void;
 }) {
@@ -28,12 +23,6 @@ export function MatchControls({
   const [a, b] = state.config.sides;
   const name = (side: SideId) => sideName(state, side);
   const canPropose = pending === undefined && state.matchWonBy === undefined;
-
-  /** Training shortcut: the point counts at once, both sides agreeing. */
-  const award = (winner: SideId) => {
-    dispatch({ type: 'point-proposed', winner });
-    dispatch({ type: 'point-confirmed' });
-  };
 
   const undo = () =>
     Alert.alert('Annuler le dernier point ?', 'Le score revient au point précédent.', [
@@ -53,7 +42,7 @@ export function MatchControls({
           onConfirm={() => dispatch({ type: 'point-confirmed' })}
           onReject={() => dispatch({ type: 'point-rejected' })}
         />
-      ) : tab === 'score' ? (
+      ) : (
         [a, b].map((side) => (
           <Button
             key={side.id}
@@ -63,21 +52,6 @@ export function MatchControls({
             style={styles.action}
           />
         ))
-      ) : (
-        <>
-          <Button
-            label="Serveur"
-            onPress={() => award(state.server)}
-            disabled={!canPropose}
-            style={styles.action}
-          />
-          <Button
-            label="Relanceur"
-            onPress={() => award(state.server === a.id ? b.id : a.id)}
-            disabled={!canPropose}
-            style={styles.action}
-          />
-        </>
       )}
       <Button
         label={opening ? '…' : 'VAR'}

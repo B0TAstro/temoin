@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { Button } from '@/shared/ui/Button';
 import { MessageScreen } from '@/shared/ui/MessageScreen';
 
-/** A temoin://match link with a malformed session code or key: back to the home screen. */
+/** A temoin://match link with a malformed session code or key: back to the home screen */
 export function InvalidLink() {
   return (
     <MessageScreen
