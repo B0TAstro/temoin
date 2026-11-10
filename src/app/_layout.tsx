@@ -11,7 +11,6 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.ink } }}>
-        {/* No swipe back during a match: leaving it deletes the videos. */}
         <Stack.Screen name="match" options={{ gestureEnabled: false }} />
       </Stack>
     </GestureHandlerRootView>

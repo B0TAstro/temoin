@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { decodeForm, newSession, useHostSession } from '@/features/session';
+import { decodeForm, useHostSession } from '@/features/session';
 
 import { MatchScreen } from './MatchScreen';
 
@@ -11,10 +11,9 @@ export function HostMatch({
   rawForm,
 }: {
   sessionId: string;
-  sessionKey: string | undefined;
+  sessionKey: string;
   rawForm: string | undefined;
 }) {
   const form = useMemo(() => decodeForm(rawForm), [rawForm]);
-  const key = useMemo(() => sessionKey ?? newSession().key, [sessionKey]);
-  return <MatchScreen session={useHostSession(sessionId, key, form)} />;
+  return <MatchScreen session={useHostSession(sessionId, sessionKey, form)} />;
 }
