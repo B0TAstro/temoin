@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import type { MatchState } from '@/core/score/types';
+import type { MatchState } from '@/sports/tennis';
 import type { ClipStats } from '@/features/recording/ClipRecorder';
 import { Scoreboard } from '@/features/score/Scoreboard';
 import { colors, radius } from '@/shared/ui/theme';

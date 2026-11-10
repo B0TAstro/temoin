@@ -11,7 +11,7 @@ import type { GuestMessage, HostMessage } from '@/core/protocol/messages';
 import { SealedCodec } from '@/core/protocol/SealedCodec';
 
 import type { Session } from './Session';
-import { type SetupForm, toSetup } from './setup';
+import { type SetupForm, toMatchSetup } from '@/sports/tennis';
 
 /**
  * The host keeps the log (HostLog) and sends every new event to its guests. Works with no guest
@@ -19,7 +19,7 @@ import { type SetupForm, toSetup } from './setup';
  * with the session key.
  */
 export function useHostSession(sessionId: string, key: string, form: SetupForm): Session {
-  const setup = useMemo(() => toSetup(form), [form]);
+  const setup = useMemo(() => toMatchSetup(form), [form]);
   const hostLog = useMemo(() => new HostLog(setup), [setup]);
   const [log, setLog] = useState<readonly LoggedEvent[]>(hostLog.events);
   const [link, setLink] = useState<LinkStatus | 'off'>('off');

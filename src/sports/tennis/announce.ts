@@ -1,4 +1,4 @@
-import type { MatchState, Point, SideId } from '@/core/score/types';
+import type { MatchState, Point, SideId } from './types';
 
 /* ───────────────────────────────────────────────────────────────────────────
  * The STRING LITERALS below are spoken French, not identifiers. They are the

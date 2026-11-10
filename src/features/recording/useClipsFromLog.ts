@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
-import { type LoggedEvent, type MatchSetup, replay } from '@/core/events/matchLog';
-import { scoreLabel } from '@/core/score/labels';
+import { type LoggedEvent, replay } from '@/core/events/matchLog';
+import { type MatchSetup, scoreLabel } from '@/sports/tennis';
 
 import type { ClipRecorder } from './ClipRecorder';
 

@@ -1,7 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { pointText, roleLabel, sideName } from '@/core/score/labels';
-import type { MatchState, Side } from '@/core/score/types';
+import { type MatchState, pointText, roleLabel, type Side, sideName } from '@/sports/tennis';
 import { colors, radius } from '@/shared/ui/theme';
 
 function Row({ side, state }: { side: Side; state: MatchState }) {

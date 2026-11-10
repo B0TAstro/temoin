@@ -1,4 +1,4 @@
-import type { SideId } from '@/core/score/types';
+import type { SideId } from '@/sports/tennis';
 
 import type { MatchEvent, MatchView } from './matchLog';
 

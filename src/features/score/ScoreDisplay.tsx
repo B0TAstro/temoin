@@ -1,7 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { pointText, roleLabel, sideName } from '@/core/score/labels';
-import type { MatchState } from '@/core/score/types';
+import { type MatchState, pointText, roleLabel, sideName } from '@/sports/tennis';
 import { colors } from '@/shared/ui/theme';
 
 /** The match screen's score: readable from a distance, nothing else. */

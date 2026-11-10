@@ -1,13 +1,14 @@
-import { expectedPhrasings } from '@/core/score/announce';
 import {
   applyPoint,
+  type Candidate,
+  expectedPhrasings,
   isNearJump,
+  type MatchState,
   nextCandidates,
   plausibleStates,
+  type SideId,
   stateKey,
-} from '@/core/score/stateMachine';
-import type { Candidate } from '@/core/score/stateMachine';
-import type { MatchState, SideId } from '@/core/score/types';
+} from '@/sports/tennis';
 import { splitCommand } from './command';
 import { splitGamesPrefix } from './gamesPrefix';
 import { normalize } from './normalize';

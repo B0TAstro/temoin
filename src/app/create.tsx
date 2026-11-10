@@ -5,7 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { randomBytes } from '@/shared/native/random';
 import { newSessionId, newSessionKey } from '@/core/protocol/joinLink';
-import { DEFAULT_FORM, encodeForm, type SetupForm } from '@/features/session/setup';
+import { encodeForm } from '@/features/session/setup';
+import { DEFAULT_FORM, type SetupForm } from '@/sports/tennis';
 import { Button } from '@/shared/ui/Button';
 import { colors, radius, touch } from '@/shared/ui/theme';
 

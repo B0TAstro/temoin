@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { ReplayOutcome } from '@/core/events/outcome';
-import type { SideId } from '@/core/score/types';
+import type { SideId } from '@/sports/tennis';
 import { colors } from '@/shared/ui/theme';
 
 import { BarButton } from './ReplayButtons';

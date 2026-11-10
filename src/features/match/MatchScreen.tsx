@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { MatchView } from '@/core/events/matchLog';
 import { outcomeEvents } from '@/core/events/outcome';
-import { sideName } from '@/core/score/labels';
+import { sideName, toMatchSetup } from '@/sports/tennis';
 import { useAppActive } from '@/features/recording/useAppActive';
 import { useClipRecorder } from '@/features/recording/useClipRecorder';
 import { useClipsFromLog } from '@/features/recording/useClipsFromLog';
@@ -16,7 +16,7 @@ import { ScoreDisplay } from '@/features/score/ScoreDisplay';
 import { InviteOverlay } from '@/features/session/InviteOverlay';
 import { linkLabel } from '@/features/session/linkLabel';
 import type { Session } from '@/features/session/Session';
-import { decodeForm, toSetup } from '@/features/session/setup';
+import { decodeForm } from '@/features/session/setup';
 import { useVoice } from '@/features/voice/useVoice';
 import { heardLine } from '@/features/voice/voiceLabels';
 import { Button } from '@/shared/ui/Button';
@@ -36,7 +36,7 @@ export function MatchScreen({ session }: { session: Session & { view: MatchView 
   const { view, dispatch, log } = session;
   const { state } = view;
   const [a, b] = state.config.sides;
-  const setup = useMemo(() => toSetup(session.form ?? decodeForm(undefined)), [session.form]);
+  const setup = useMemo(() => toMatchSetup(session.form ?? decodeForm(undefined)), [session.form]);
 
   useKeepAwake(); // otherwise the screen locks and the OS stops the camera
   const camera = useMatchCamera();

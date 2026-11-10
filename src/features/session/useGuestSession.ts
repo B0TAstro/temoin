@@ -10,7 +10,7 @@ import type { GuestMessage, HostMessage } from '@/core/protocol/messages';
 import { SealedCodec } from '@/core/protocol/SealedCodec';
 
 import type { Session } from './Session';
-import { type SetupForm, toSetup } from './setup';
+import { type SetupForm, toMatchSetup } from '@/sports/tennis';
 
 /**
  * A guest mirrors the host's log. Its actions are sent to the host as intents and only count
@@ -59,7 +59,7 @@ export function useGuestSession(sessionId: string, key: string): Session {
     transport.current?.send({ t: 'intent', event });
   }, []);
 
-  const setup = useMemo(() => (form ? toSetup(form) : undefined), [form]);
+  const setup = useMemo(() => (form ? toMatchSetup(form) : undefined), [form]);
   const view = useMemo(() => (setup ? replay(setup, log) : undefined), [setup, log]);
   return {
     role: 'guest',

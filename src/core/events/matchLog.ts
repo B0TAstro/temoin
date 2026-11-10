@@ -1,5 +1,10 @@
-import { applyPoint, createMatch } from '@/core/score/stateMachine';
-import type { MatchConfig, MatchState, SideId } from '@/core/score/types';
+import {
+  applyPoint,
+  createMatch,
+  type MatchSetup,
+  type MatchState,
+  type SideId,
+} from '@/sports/tennis';
 
 /**
  * Everything that changes the match, in order. The score is never stored: it is replayed from
@@ -31,11 +36,6 @@ export type MatchEvent =
   | { type: 'var-closed' };
 
 export type LoggedEvent = MatchEvent & { seq: number };
-
-export type MatchSetup = {
-  config: MatchConfig;
-  firstServer: SideId;
-};
 
 export type MatchView = {
   state: MatchState;

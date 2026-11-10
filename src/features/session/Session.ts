@@ -1,7 +1,7 @@
 import type { LinkStatus } from '@/adapters/link/Transport';
 import type { LoggedEvent, MatchEvent, MatchView } from '@/core/events/matchLog';
 
-import type { SetupForm } from './setup';
+import type { SetupForm } from '@/sports/tennis';
 
 /** What the match screen sees of the session, the same on the host and on a guest. */
 export type Session = {
