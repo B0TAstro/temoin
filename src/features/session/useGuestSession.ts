@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { BleGuest } from './native/ble/BleGuest';
-import type { GuestTransport, LinkStatus } from './native/Transport';
-import { type LoggedEvent, type MatchEvent, replayLog } from './logic/matchLog';
 import { randomBytes } from '@/shared/native/random';
+import { type SetupForm, toMatchSetup } from '@/sports/tennis';
+
 import { receiveEvent, receiveSnapshot } from './logic/guestLog';
 import { decodeSessionKey } from './logic/joinLink';
+import { type LoggedEvent, type MatchEvent, replayLog } from './logic/matchLog';
 import type { GuestMessage, HostMessage } from './logic/messages';
 import { SealedCodec } from './logic/SealedCodec';
-
+import { BleGuest } from './native/ble/BleGuest';
+import type { GuestTransport, LinkStatus } from './native/Transport';
 import type { Session } from './Session';
-import { type SetupForm, toMatchSetup } from '@/sports/tennis';
 
 /**
  * A guest mirrors the host's log. Its actions are sent to the host as intents and only count

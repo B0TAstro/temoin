@@ -1,4 +1,5 @@
 import { fromBase64Url, toBase64Url } from '@/shared/lib/base64url';
+
 import { PROTOCOL_VERSION } from './messages';
 import { KEY_BYTES } from './SealedCodec';
 

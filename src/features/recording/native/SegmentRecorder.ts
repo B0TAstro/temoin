@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import type { CameraVideoOutput, Recorder } from 'react-native-vision-camera';
 
 import { deleteFile, fileSize, toUri } from '@/shared/native/files';
+
 import type { Segment } from '../logic/Segment';
 
 /**

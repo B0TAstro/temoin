@@ -3,9 +3,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video, { type VideoRef } from 'react-native-video';
 
-import { toUri } from '@/shared/native/files';
-import { stopBeforePeak, useSoundPeaks } from '@/features/sound-peaks';
 import { buildTimeline, locate, type Segment } from '@/features/recording';
+import { stopBeforePeak, useSoundPeaks } from '@/features/sound-peaks';
+import { toUri } from '@/shared/native/files';
 import { colors, radius, touch } from '@/shared/ui/theme';
 import { ZoomableView } from '@/shared/ui/ZoomableView';
 

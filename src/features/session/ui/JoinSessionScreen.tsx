@@ -11,9 +11,10 @@ import {
   useObjectOutput,
 } from 'react-native-vision-camera';
 
-import { type Join, parseJoinLink, toJoin } from '../logic/joinLink';
 import { Button } from '@/shared/ui/Button';
 import { colors, radius } from '@/shared/ui/theme';
+
+import { type Join, parseJoinLink, toJoin } from '../logic/joinLink';
 
 const QR_TYPES: ScannedObjectType[] = ['qr'];
 

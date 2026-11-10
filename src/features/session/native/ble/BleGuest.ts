@@ -12,11 +12,10 @@ import {
 } from 'munim-bluetooth';
 import { Platform } from 'react-native';
 
-import type { Codec } from '../../logic/codec';
-
 import { encodeLine, LineDecoder } from './framing';
 import { advertisedName, sameUuid, SERVICE, TO_GUESTS, TO_HOST } from './gatt';
 import { SerialSender } from './SerialSender';
+import type { Codec } from '../../logic/codec';
 import type { GuestTransport, LinkStatus } from '../Transport';
 
 const RETRY_MS = 2000;

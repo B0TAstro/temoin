@@ -1,9 +1,9 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import type { MatchState } from '@/sports/tennis';
 import type { ClipStats } from '@/features/recording';
 import { Scoreboard } from '@/features/score';
 import { colors, radius } from '@/shared/ui/theme';
+import type { MatchState } from '@/sports/tennis';
 
 /** The training tab: the full scoreboard and what the phone measures (fps, files, events). */
 export function TrainingPanel({

@@ -1,7 +1,7 @@
-import type { LinkStatus } from './native/Transport';
-import type { LoggedEvent, MatchEvent, MatchView } from './logic/matchLog';
-
 import type { SetupForm } from '@/sports/tennis';
+
+import type { LoggedEvent, MatchEvent, MatchView } from './logic/matchLog';
+import type { LinkStatus } from './native/Transport';
 
 /** What the match screen sees of the session, the same on the host and on a guest. */
 export type Session = {

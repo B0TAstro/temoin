@@ -1,5 +1,6 @@
-import { isValid, type LoggedEvent, type MatchEvent, replayLog } from './matchLog';
 import type { MatchSetup } from '@/sports/tennis';
+
+import { isValid, type LoggedEvent, type MatchEvent, replayLog } from './matchLog';
 
 /**
  * The host's side of the protocol: the one log of the session. Every change, the host's own as

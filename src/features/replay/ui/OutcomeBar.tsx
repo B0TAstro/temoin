@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { ReplayOutcome } from '../logic/outcome';
-import type { SideId } from '@/sports/tennis';
 import { colors } from '@/shared/ui/theme';
+import type { SideId } from '@/sports/tennis';
 
 import { BarButton } from './ReplayButtons';
+import type { ReplayOutcome } from '../logic/outcome';
 
 export type Side = { id: SideId; name: string };
 

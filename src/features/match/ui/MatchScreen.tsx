@@ -5,26 +5,26 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
-  decodeForm,
-  InviteOverlay,
-  linkLabel,
-  type MatchView,
-  type Session,
-} from '@/features/session';
-import { outcomeEvents, ReplayScreen, useVarReplay } from '@/features/replay';
-import { sideName, toMatchSetup } from '@/sports/tennis';
-import {
   TARGET_FPS,
   useAppActive,
   useClipRecorder,
   useClipsFromLog,
   useMatchCamera,
 } from '@/features/recording';
+import { outcomeEvents, ReplayScreen, useVarReplay } from '@/features/replay';
 import { ScoreDisplay } from '@/features/score';
+import {
+  decodeForm,
+  InviteOverlay,
+  linkLabel,
+  type MatchView,
+  type Session,
+} from '@/features/session';
 import { heardLine, useVoice } from '@/features/voice';
 import { Button } from '@/shared/ui/Button';
 import { MessageScreen } from '@/shared/ui/MessageScreen';
 import { colors } from '@/shared/ui/theme';
+import { sideName, toMatchSetup } from '@/sports/tennis';
 
 import { MatchControls, type MatchTab } from './MatchControls';
 import { MatchSidebar } from './MatchSidebar';

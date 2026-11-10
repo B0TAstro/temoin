@@ -1,4 +1,3 @@
-import { COMMAND_SPOKEN } from './command';
 import {
   expectedPhrasings,
   fullScorePhrasings,
@@ -6,6 +5,8 @@ import {
   nextCandidates,
   plausibleStates,
 } from '@/sports/tennis';
+
+import { COMMAND_SPOKEN } from './command';
 
 /** Vosk's rejection token. Without it, the decoder forces noise into the vocabulary. */
 export const UNKNOWN = '[unk]';

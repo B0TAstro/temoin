@@ -1,7 +1,7 @@
 /**
  * How a line travels over BLE: ended by a newline, cut into hex packets that fit one write or
  * notification. The line itself (a sealed message) comes from the session's codec, in
- * core/protocol: here it is just ASCII.
+ * ../../logic: here it is just ASCII.
  */
 
 /** Max bytes per BLE packet: fits the usual negotiated MTU (185 on iOS, 517 asked on Android). */

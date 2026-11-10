@@ -3,12 +3,11 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/shared/ui/theme';
 
-import type { ReplayOutcome } from '../logic/outcome';
-import type { ReplayClip } from '../logic/toReplayClips';
-
 import { ClipPlayer } from './ClipPlayer';
 import { OutcomeBar, type Side } from './OutcomeBar';
 import { NavButton } from './ReplayButtons';
+import type { ReplayOutcome } from '../logic/outcome';
+import type { ReplayClip } from '../logic/toReplayClips';
 
 type Props = {
   /** Oldest first: "◀" goes back in time. */

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { type MatchState, pointText, roleLabel, type Side, sideName } from '@/sports/tennis';
 import { colors, radius } from '@/shared/ui/theme';
+import { type MatchState, pointText, roleLabel, type Side, sideName } from '@/sports/tennis';
 
 function Row({ side, state }: { side: Side; state: MatchState }) {
   const serving = state.server === side.id;

@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { newSession } from '../newSession';
-import { encodeForm } from '../setup';
-import { DEFAULT_FORM, type SetupForm } from '@/sports/tennis';
 import { Button } from '@/shared/ui/Button';
 import { colors, radius, touch } from '@/shared/ui/theme';
+import { DEFAULT_FORM, type SetupForm } from '@/sports/tennis';
+
+import { newSession } from '../newSession';
+import { encodeForm } from '../setup';
 
 /** One screen, everything prefilled: the first point is filmed in under a minute. */
 export function CreateSessionScreen() {

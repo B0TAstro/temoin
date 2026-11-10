@@ -1,13 +1,13 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Camera, type CameraDevice, type CameraSessionConfig } from 'react-native-vision-camera';
 
+import { type MatchCamera, TARGET_FPS } from '@/features/recording';
 import { VOICE_LABEL, type VoiceStatus } from '@/features/voice';
 import { IconButton } from '@/shared/ui/IconButton';
 import { TabButton } from '@/shared/ui/TabButton';
 import { colors, radius } from '@/shared/ui/theme';
 
 import type { MatchTab } from './MatchControls';
-import { type MatchCamera, TARGET_FPS } from '@/features/recording';
 
 /**
  * The left column: the camera preview, what the phone is doing (recording, link, voice), the

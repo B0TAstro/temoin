@@ -7,11 +7,10 @@ import {
   updateCharacteristicValue,
 } from 'munim-bluetooth';
 
-import type { Codec } from '../../logic/codec';
-
 import { encodeLine, LineDecoder } from './framing';
 import { advertisedName, sameUuid, SERVICE, TO_GUESTS, TO_HOST } from './gatt';
 import { SerialSender } from './SerialSender';
+import type { Codec } from '../../logic/codec';
 import type { HostTransport } from '../Transport';
 
 /**

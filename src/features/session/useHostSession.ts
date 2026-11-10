@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { randomBytes } from '@/shared/native/random';
+import { type SetupForm, toMatchSetup } from '@/sports/tennis';
+
+import { HostLog } from './logic/hostLog';
+import { decodeSessionKey } from './logic/joinLink';
+import { type LoggedEvent, type MatchEvent, replayLog } from './logic/matchLog';
+import type { GuestMessage, HostMessage } from './logic/messages';
+import { SealedCodec } from './logic/SealedCodec';
 import { BleHost } from './native/ble/BleHost';
 import { LocalHost } from './native/LocalTransport';
 import type { HostTransport, LinkStatus } from './native/Transport';
-import { type LoggedEvent, type MatchEvent, replayLog } from './logic/matchLog';
-import { randomBytes } from '@/shared/native/random';
-import { HostLog } from './logic/hostLog';
-import { decodeSessionKey } from './logic/joinLink';
-import type { GuestMessage, HostMessage } from './logic/messages';
-import { SealedCodec } from './logic/SealedCodec';
-
 import type { Session } from './Session';
-import { type SetupForm, toMatchSetup } from '@/sports/tennis';
 
 /**
  * The host keeps the log (HostLog) and sends every new event to its guests. Works with no guest
