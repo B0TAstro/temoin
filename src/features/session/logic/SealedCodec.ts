@@ -10,13 +10,21 @@ export const KEY_BYTES = 32;
 const NONCE_BYTES = 24;
 const TAG_BYTES = 16;
 
+/** Who sealed a message. Signed with it, so a message cannot be sent back to the side that wrote it. */
+export type Side = 'host' | 'guest';
+const SIDE_BYTES: Record<Side, Uint8Array> = {
+  host: utf8ToBytes('host'),
+  guest: utf8ToBytes('guest'),
+};
+
 /**
  * Every message of a session, encrypted and signed with the session key (XChaCha20-Poly1305):
  * without the QR code, a phone in range can neither read the score nor change it.
  *
  * A message is sealed once, with a fresh random nonce. A copy of a message already received (an
  * attacker sending back what it recorded, an "Annuler le point" for instance) carries the same
- * nonce, and is dropped.
+ * nonce, and is dropped. A message sent back to the phone that sealed it (a fake host returning
+ * a guest's own "sync") was signed for the other side, and is dropped too.
  */
 export class SealedCodec<In, Out> implements Codec<In, Out> {
   private readonly seen = new Set<string>();
@@ -25,11 +33,15 @@ export class SealedCodec<In, Out> implements Codec<In, Out> {
     private readonly key: Uint8Array,
     /** Cryptographically secure random bytes, from the platform. */
     private readonly randomBytes: (count: number) => Uint8Array,
+    /** This phone's side: it seals as this side and only opens what the other side sealed. */
+    private readonly side: Side,
   ) {}
 
   encode(message: Out): string {
     const nonce = this.randomBytes(NONCE_BYTES);
-    const sealed = xchacha20poly1305(this.key, nonce).encrypt(utf8ToBytes(JSON.stringify(message)));
+    const sealed = xchacha20poly1305(this.key, nonce, SIDE_BYTES[this.side]).encrypt(
+      utf8ToBytes(JSON.stringify(message)),
+    );
     return toBase64Url(concatBytes(nonce, sealed));
   }
 
@@ -40,12 +52,15 @@ export class SealedCodec<In, Out> implements Codec<In, Out> {
     const id = toBase64Url(nonce);
     if (this.seen.has(id)) return null;
     try {
-      const plain = xchacha20poly1305(this.key, nonce).decrypt(bytes.subarray(NONCE_BYTES));
+      const from = this.side === 'host' ? 'guest' : 'host';
+      const plain = xchacha20poly1305(this.key, nonce, SIDE_BYTES[from]).decrypt(
+        bytes.subarray(NONCE_BYTES),
+      );
       // Only a genuine message is remembered: garbage cannot fill the set.
       this.seen.add(id);
       return JSON.parse(bytesToUtf8(plain)) as In;
     } catch {
-      return null; // wrong key, or tampered with
+      return null; // wrong key, wrong side, or tampered with
     }
   }
 }

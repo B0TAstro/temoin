@@ -1,5 +1,6 @@
 export type { Session } from './Session';
 export { linkLabel } from './linkLabel';
+export { toSession } from './logic/joinLink';
 export type { LoggedEvent, MatchEvent, MatchView } from './logic/matchLog';
 export { replayLog } from './logic/matchLog';
 export { newSession } from './newSession';

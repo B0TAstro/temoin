@@ -11,5 +11,8 @@ export type GuestMessage = { t: 'intent'; event: MatchEvent } | { t: 'sync' };
 export type HostMessage<Setup> =
   { t: 'snapshot'; setup: Setup; log: LoggedEvent[] } | { t: 'event'; event: LoggedEvent };
 
-/** 2: every message is sealed with the session key from the QR code. */
-export const PROTOCOL_VERSION = 2;
+/**
+ * 2: every message is sealed with the session key from the QR code.
+ * 3: and signed with the side that sealed it (host or guest).
+ */
+export const PROTOCOL_VERSION = 3;
