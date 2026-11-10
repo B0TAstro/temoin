@@ -1,4 +1,4 @@
-export type { Session } from './Session';
+export type { GuestSession, HostSession, MatchSession, Session } from './Session';
 export { linkLabel } from './linkLabel';
 export { toSession } from './logic/joinLink';
 export type { LoggedEvent, MatchEvent, MatchView } from './logic/matchLog';

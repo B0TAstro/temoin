@@ -3,20 +3,35 @@ import type { SetupForm } from '@/sports/tennis';
 import type { LoggedEvent, MatchEvent, MatchView } from './logic/matchLog';
 import type { LinkStatus } from './native/Transport';
 
-/** What the match screen sees of the session, the same on the host and on a guest. */
-export type Session = {
-  role: 'host' | 'guest';
+/** What every phone of the session has, host or guest. */
+type SessionBase = {
   sessionId: string;
   /** The session key, shown in the host's QR code. */
   key: string;
-  /** Undefined on a guest until the host has sent the match. */
-  form?: SetupForm;
-  view?: MatchView;
   log: readonly LoggedEvent[];
   /** Every change goes through here, on the host as on a guest. */
   dispatch: (event: MatchEvent) => void;
-  /** Host: Bluetooth on or not. Guest: link to the host. */
-  link: LinkStatus | 'off';
-  /** Host only: guests connected. */
+};
+
+/** The phone that created the session: it knows the match from the start and keeps the log. */
+export type HostSession = SessionBase & {
+  role: 'host';
+  form: SetupForm;
+  view: MatchView;
+  /** Bluetooth on (guests can join), or off: the match goes on with no radio. */
+  link: 'connected' | 'off';
   guests: number;
 };
+
+/** A phone that scanned the QR code: it learns the match once the host has sent it. */
+export type GuestSession = SessionBase & {
+  role: 'guest';
+  form?: SetupForm;
+  view?: MatchView;
+  link: LinkStatus;
+};
+
+export type Session = HostSession | GuestSession;
+
+/** A session whose match is known: what the match screen shows. */
+export type MatchSession = HostSession | (GuestSession & { form: SetupForm; view: MatchView });

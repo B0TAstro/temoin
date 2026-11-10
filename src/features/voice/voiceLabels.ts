@@ -1,4 +1,4 @@
-import type { Heard, VoiceStatus } from './useVoice';
+import type { Heard, VoiceStatus } from './VoiceListener';
 
 export const VOICE_LABEL: Record<VoiceStatus, string> = {
   off: 'Voix coupée',

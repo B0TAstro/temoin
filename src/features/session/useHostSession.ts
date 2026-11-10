@@ -10,19 +10,19 @@ import type { GuestMessage, HostMessage } from './logic/messages';
 import { SealedCodec } from './logic/SealedCodec';
 import { BleHost } from './native/ble/BleHost';
 import { LocalHost } from './native/LocalTransport';
-import type { HostTransport, LinkStatus } from './native/Transport';
-import type { Session } from './Session';
+import type { HostTransport } from './native/Transport';
+import type { HostSession } from './Session';
 
 /**
  * The host keeps the log (HostLog) and sends every new event to its guests. Works with no guest
  * at all, and with no Bluetooth: the match then goes on with no radio. Every message is sealed
  * with the session key.
  */
-export function useHostSession(sessionId: string, key: string, form: SetupForm): Session {
+export function useHostSession(sessionId: string, key: string, form: SetupForm): HostSession {
   const setup = useMemo(() => toMatchSetup(form), [form]);
   const hostLog = useMemo(() => new HostLog(setup), [setup]);
   const [log, setLog] = useState<readonly LoggedEvent[]>(hostLog.events);
-  const [link, setLink] = useState<LinkStatus | 'off'>('off');
+  const [link, setLink] = useState<HostSession['link']>('off');
   const [guests, setGuests] = useState(0);
   const transport = useRef<HostTransport<HostMessage<SetupForm>> | null>(null);
 

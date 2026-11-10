@@ -1,26 +1,33 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { CameraVideoOutput } from 'react-native-vision-camera';
 
-import { ClipRecorder, type ClipStats } from './ClipRecorder';
+import { deleteFile } from '@/shared/native/files';
 
-/** Records one file per point while `recording` is true, and exposes stats for the screen. */
+import { ClipRecorder } from './ClipRecorder';
+import { SegmentRecorder } from './native/SegmentRecorder';
+
+/**
+ * Records one file per point while `recording` is true, on VisionCamera. The hook builds the
+ * recorder with the phone's camera and files; the recorder does the work.
+ */
 export function useClipRecorder(videoOutput: CameraVideoOutput, recording: boolean) {
-  const clips = useMemo(() => new ClipRecorder(videoOutput), [videoOutput]);
-  const [stats, setStats] = useState<ClipStats>(() => clips.getStats());
+  const clips = useMemo(
+    () =>
+      new ClipRecorder({
+        createRecorder: (events) => new SegmentRecorder(videoOutput, events),
+        deleteFile,
+      }),
+    [videoOutput],
+  );
+  const stats = useSyncExternalStore(clips.stats.subscribe, clips.stats.get);
 
   useEffect(() => {
     if (recording) clips.start();
     else clips.stop();
   }, [clips, recording]);
 
-  useEffect(() => {
-    const id = setInterval(() => setStats(clips.getStats()), 500);
-    return () => {
-      clearInterval(id);
-      // Nothing outlives the match: every clip is deleted (GDPR).
-      clips.discard();
-    };
-  }, [clips]);
+  // Nothing outlives the match: every clip is deleted (GDPR).
+  useEffect(() => () => clips.discard(), [clips]);
 
   return { stats, clips };
 }

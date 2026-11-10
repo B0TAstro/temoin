@@ -1,6 +1,8 @@
 import type { EventSubscription } from 'react-native';
 import * as Vosk from 'react-native-vosk';
 
+import type { SpeechEngine, SpeechHooks } from './SpeechEngine';
+
 /** Folder name inside the app bundle, placed there by the react-native-vosk config plugin. */
 const MODEL = 'vosk-model-small-fr-0.22';
 
@@ -17,21 +19,15 @@ function serially(task: () => Promise<void>): Promise<void> {
   return next;
 }
 
-export type VoskHooks = {
-  onResult: (text: string) => void;
-  onPartial?: (text: string) => void;
-  onError?: (message: string) => void;
-};
-
 /**
  * On-device French speech to text, constrained to a grammar (from the voice POC).
  *
  * Vosk restarts to change its grammar, which costs a beat of deafness: callers change it only at
  * game boundaries.
  */
-export class VoskEngine {
+export class VoskEngine implements SpeechEngine {
   #grammar: string[];
-  #hooks: VoskHooks;
+  #hooks: SpeechHooks;
   #subscriptions: EventSubscription[] = [];
   /** What the caller asked for last. Each transition brings the recognizer in line with it. */
   #wanted = false;
@@ -39,7 +35,7 @@ export class VoskEngine {
   /** The grammar changed while running: the next transition restarts the recognizer. */
   #stale = false;
 
-  constructor(grammar: string[], hooks: VoskHooks) {
+  constructor(grammar: string[], hooks: SpeechHooks) {
     this.#grammar = grammar;
     this.#hooks = hooks;
   }
@@ -49,7 +45,6 @@ export class VoskEngine {
     return serially(() => this.#sync());
   }
 
-  /** Takes effect even while a start is still pending: that start then ends stopped. */
   stop(): Promise<void> {
     this.#wanted = false;
     return serially(() => this.#sync());

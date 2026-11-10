@@ -1,10 +1,8 @@
-import type { CameraVideoOutput } from 'react-native-vision-camera';
-
-import { deleteFile } from '@/shared/native/files';
+import { Store } from '@/shared/lib/Store';
 
 import { type Clip, ClipQueue, type PointSnapshot } from './logic/ClipQueue';
 import type { Segment } from './logic/Segment';
-import { MAX_POINT_SECONDS, SegmentRecorder } from './native/SegmentRecorder';
+import type { CreateVideoRecorder, VideoRecorder } from './native/VideoRecorder';
 
 /** Finished points kept on disk, on top of the point being recorded: 3 points in all. */
 export const MAX_SAVED_POINTS = 2;
@@ -23,20 +21,32 @@ export type ClipsForReplay = { finished: Clip[]; current: Clip };
 
 const copy = (clip: Clip): Clip => ({ ...clip, segments: [...clip.segments] });
 
+/** What the recorder is built with: the camera, and how to delete a file. Fakes in tests. */
+export type ClipRecorderDeps = {
+  createRecorder: CreateVideoRecorder;
+  deleteFile: (path: string) => void;
+};
+
 /**
- * One file per point, on disk. Wires the camera (SegmentRecorder) to the clip logic (ClipQueue)
+ * One file per point, on disk. Wires the camera (a VideoRecorder) to the clip logic (ClipQueue)
  * and deletes the files the queue lets go. Tasks run in order: a cut waits for the next file.
+ * Its stats are in `stats`, updated as soon as something changes.
  */
 export class ClipRecorder {
   private readonly queue = new ClipQueue(MAX_SAVED_POINTS);
-  private readonly recorder: SegmentRecorder;
+  private readonly recorder: VideoRecorder;
+  private readonly deleteFile: (path: string) => void;
+  readonly stats: Store<ClipStats>;
   private chain: Promise<unknown> = Promise.resolve();
   private trimTimer: ReturnType<typeof setInterval> | undefined;
 
-  constructor(videoOutput: CameraVideoOutput) {
-    this.recorder = new SegmentRecorder(videoOutput, (segment) =>
-      this.delete(this.queue.addSegment(segment)),
-    );
+  constructor({ createRecorder, deleteFile }: ClipRecorderDeps) {
+    this.deleteFile = deleteFile;
+    this.recorder = createRecorder({
+      onSegment: (segment) => this.delete(this.queue.addSegment(segment)),
+      onChange: () => this.refresh(),
+    });
+    this.stats = new Store(this.readStats());
   }
 
   start() {
@@ -44,7 +54,7 @@ export class ClipRecorder {
       this.recorder.start();
       clearInterval(this.trimTimer);
       this.trimTimer = setInterval(
-        () => this.delete(this.queue.trimCurrent(Date.now(), MAX_POINT_SECONDS)),
+        () => this.delete(this.queue.trimCurrent(Date.now(), this.recorder.maxPointSeconds)),
         TRIM_EVERY_MS,
       );
     });
@@ -84,7 +94,7 @@ export class ClipRecorder {
     this.delete(this.queue.clear());
   }
 
-  getStats(): ClipStats {
+  private readStats(): ClipStats {
     return {
       recording: this.recorder.isRunning,
       savedCount: this.queue.finished.length,
@@ -95,12 +105,18 @@ export class ClipRecorder {
   }
 
   private enqueue(task: () => Promise<void>): Promise<void> {
-    const next = this.chain.then(task, task);
+    const next = this.chain.then(task, task).finally(() => this.refresh());
     this.chain = next.catch((e) => console.warn('Clip task failed', e));
     return next;
   }
 
+  /** Every change of the queue goes through here or through a task: the stats follow. */
   private delete(segments: Segment[]) {
-    for (const segment of segments) deleteFile(segment.path);
+    for (const segment of segments) this.deleteFile(segment.path);
+    this.refresh();
+  }
+
+  private refresh() {
+    this.stats.set(this.readStats());
   }
 }

@@ -13,13 +13,7 @@ import {
 } from '@/features/recording';
 import { outcomeEvents, ReplayScreen, useVarReplay } from '@/features/replay';
 import { ScoreDisplay } from '@/features/score';
-import {
-  decodeForm,
-  InviteOverlay,
-  linkLabel,
-  type MatchView,
-  type Session,
-} from '@/features/session';
+import { InviteOverlay, linkLabel, type MatchSession } from '@/features/session';
 import { heardLine, useVoice } from '@/features/voice';
 import { Button } from '@/shared/ui/Button';
 import { MessageScreen } from '@/shared/ui/MessageScreen';
@@ -34,11 +28,11 @@ import { TrainingPanel } from './TrainingPanel';
  * The match, in landscape: the camera and the session on the left, the score in the middle, the
  * match buttons on the right, under the thumb. The same screen on the host and on a guest.
  */
-export function MatchScreen({ session }: { session: Session & { view: MatchView } }) {
+export function MatchScreen({ session }: { session: MatchSession }) {
   const { view, dispatch, log } = session;
   const { state } = view;
   const [a, b] = state.config.sides;
-  const setup = useMemo(() => toMatchSetup(session.form ?? decodeForm(undefined)), [session.form]);
+  const setup = useMemo(() => toMatchSetup(session.form), [session.form]);
 
   useKeepAwake(); // otherwise the screen locks and the OS stops the camera
   const camera = useMatchCamera();

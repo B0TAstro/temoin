@@ -4,7 +4,7 @@ import type { CameraVideoOutput, Recorder } from 'react-native-vision-camera';
 
 import { deleteFile, fileSize, toUri } from '@/shared/native/files';
 
-import type { Segment } from '../logic/Segment';
+import type { RecorderEvents, VideoRecorder } from './VideoRecorder';
 
 /**
  * Safety limit: a point nobody scores (forgotten tap, changeover) starts a new file after this
@@ -50,17 +50,17 @@ function purgeStaleRecordings(currentPath: string) {
  * safety limit). It keeps nothing: every finished file is handed to `onSegment`, and the caller
  * decides which ones to keep. The hardware encoder writes straight to disk, nothing is in memory.
  */
-export class SegmentRecorder {
+export class SegmentRecorder implements VideoRecorder {
   private active = new Map<Recorder, ActiveSegment>();
   private last: ActiveSegment | undefined;
   private running = false;
+  private errors = 0;
   private purged = false;
   private timer: ReturnType<typeof setTimeout> | undefined;
   /** The cut in progress: a second request (double tap, safety limit) joins it. */
   private cutting: Promise<number> | undefined;
   /** When the last file finished, to measure the gap at the next start (Android). */
   private lastEndedAt: number | undefined;
-  errorCount = 0;
   /**
    * Overlap between the last two consecutive files, in ms (negative: a gap). Approximate: it uses
    * the JS clock of the callbacks, not the timestamps of the frames.
@@ -69,24 +69,27 @@ export class SegmentRecorder {
 
   constructor(
     private readonly videoOutput: CameraVideoOutput,
-    private readonly onSegment: (segment: Segment) => void,
-    private readonly maxPointSeconds = MAX_POINT_SECONDS,
+    private readonly events: RecorderEvents,
+    readonly maxPointSeconds = MAX_POINT_SECONDS,
   ) {}
 
   get isRunning() {
     return this.running;
   }
 
+  get errorCount() {
+    return this.errors;
+  }
+
   start() {
     if (this.running) return;
-    this.running = true;
+    this.setRunning(true);
     this.last = undefined;
     this.startSegment();
   }
 
-  /** Stops recording and waits until the files in progress are written, so they can be played. */
   async stop(): Promise<void> {
-    this.running = false;
+    this.setRunning(false);
     this.last = undefined;
     clearTimeout(this.timer);
     await this.finish([...this.active.entries()]);
@@ -116,11 +119,22 @@ export class SegmentRecorder {
 
   /** Cancels the recordings in progress and deletes their files (end of the match). */
   cancel() {
-    this.running = false;
+    this.setRunning(false);
     this.last = undefined;
     clearTimeout(this.timer);
     for (const recorder of this.active.keys()) recorder.cancelRecording().catch(() => {});
     this.active.clear();
+  }
+
+  private setRunning(running: boolean) {
+    if (this.running === running) return;
+    this.running = running;
+    this.events.onChange();
+  }
+
+  private addError() {
+    this.errors += 1;
+    this.events.onChange();
   }
 
   private async finish(entries: [Recorder, ActiveSegment][]) {
@@ -141,7 +155,7 @@ export class SegmentRecorder {
     // A recorder that never finished would block the next one on Android: give up on its file.
     for (const [recorder] of entries) {
       if (!this.active.has(recorder)) continue;
-      this.errorCount += 1;
+      this.addError();
       this.active.delete(recorder);
       await recorder.cancelRecording().catch(() => {});
     }
@@ -159,7 +173,7 @@ export class SegmentRecorder {
         maxDuration: this.maxPointSeconds + MAX_DURATION_MARGIN_SECONDS,
       });
     } catch (e) {
-      this.errorCount += 1;
+      this.addError();
       console.warn('Could not create recorder', e);
       return undefined;
     }
@@ -185,7 +199,7 @@ export class SegmentRecorder {
         const endedAt = Date.now();
         this.lastEndedAt = endedAt;
         if (segment.nextStartedAt != null) this.lastOverlapMs = endedAt - segment.nextStartedAt;
-        this.onSegment({
+        this.events.onSegment({
           path,
           startedAt: segment.startedAt ?? endedAt,
           endedAt,
@@ -197,7 +211,7 @@ export class SegmentRecorder {
     };
     const onError = (error: Error) => {
       this.active.delete(recorder);
-      this.errorCount += 1;
+      this.addError();
       console.warn('Recording error', error);
       markFinished();
     };
@@ -213,7 +227,7 @@ export class SegmentRecorder {
       return segment.startedAt;
     } catch (e) {
       this.active.delete(recorder);
-      this.errorCount += 1;
+      this.addError();
       console.warn('Could not start recording', e);
       markFinished();
       return undefined;

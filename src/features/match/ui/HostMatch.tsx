@@ -16,7 +16,5 @@ export function HostMatch({
 }) {
   const form = useMemo(() => decodeForm(rawForm), [rawForm]);
   const key = useMemo(() => sessionKey ?? newSession().key, [sessionKey]);
-  const session = useHostSession(sessionId, key, form);
-  if (!session.view) return null;
-  return <MatchScreen session={{ ...session, view: session.view }} />;
+  return <MatchScreen session={useHostSession(sessionId, key, form)} />;
 }

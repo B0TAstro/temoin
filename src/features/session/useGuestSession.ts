@@ -10,17 +10,17 @@ import type { GuestMessage, HostMessage } from './logic/messages';
 import { SealedCodec } from './logic/SealedCodec';
 import { BleGuest } from './native/ble/BleGuest';
 import type { GuestTransport, LinkStatus } from './native/Transport';
-import type { Session } from './Session';
+import type { GuestSession } from './Session';
 
 /**
  * A guest mirrors the host's log. Its actions are sent to the host as intents and only count
  * once the host sends them back as events. A missing event triggers a full resync.
  */
-export function useGuestSession(sessionId: string, key: string): Session {
+export function useGuestSession(sessionId: string, key: string): GuestSession {
   const [form, setForm] = useState<SetupForm>();
   const [log, setLog] = useState<readonly LoggedEvent[]>([]);
   const logRef = useRef<readonly LoggedEvent[]>([]);
-  const [link, setLink] = useState<LinkStatus | 'off'>('searching');
+  const [link, setLink] = useState<LinkStatus>('searching');
   const transport = useRef<GuestTransport<GuestMessage> | null>(null);
 
   useEffect(() => {
@@ -74,7 +74,6 @@ export function useGuestSession(sessionId: string, key: string): Session {
     log,
     dispatch,
     link,
-    guests: 0,
     ...(form && { form }),
     ...(view && { view }),
   };

@@ -23,5 +23,5 @@ export function GuestMatch({ sessionId, sessionKey }: { sessionId: string; sessi
       </MessageScreen>
     );
   }
-  return <MatchScreen session={{ ...session, view: session.view }} />;
+  return <MatchScreen session={{ ...session, form: session.form, view: session.view }} />;
 }
