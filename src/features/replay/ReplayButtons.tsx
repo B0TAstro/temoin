@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, radius, touch } from '@/ui/theme';
+import { colors, radius, touch } from '@/shared/ui/theme';
 
 /** Round "◀ / ▶" to move between the points kept on the phone. */
 export function NavButton({

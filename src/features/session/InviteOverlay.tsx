@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { buildJoinLink } from '@/core/protocol/joinLink';
-import { Button } from '@/ui/Button';
-import { QrCode } from '@/ui/QrCode';
-import { colors } from '@/ui/theme';
+import { Button } from '@/shared/ui/Button';
+import { QrCode } from '@/shared/ui/QrCode';
+import { colors } from '@/shared/ui/theme';
 
 /**
  * The host's QR code, over the match: another phone scans it to join, at any time. It carries the

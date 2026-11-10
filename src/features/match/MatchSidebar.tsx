@@ -3,9 +3,9 @@ import { Camera, type CameraDevice, type CameraSessionConfig } from 'react-nativ
 
 import type { VoiceStatus } from '@/features/voice/useVoice';
 import { VOICE_LABEL } from '@/features/voice/voiceLabels';
-import { IconButton } from '@/ui/IconButton';
-import { TabButton } from '@/ui/TabButton';
-import { colors, radius } from '@/ui/theme';
+import { IconButton } from '@/shared/ui/IconButton';
+import { TabButton } from '@/shared/ui/TabButton';
+import { colors, radius } from '@/shared/ui/theme';
 
 import type { MatchTab } from './MatchControls';
 import { type MatchCamera, TARGET_FPS } from './useMatchCamera';

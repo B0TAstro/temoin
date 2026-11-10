@@ -1,7 +1,7 @@
 import { xchacha20poly1305 } from '@noble/ciphers/chacha.js';
 import { bytesToUtf8, concatBytes, utf8ToBytes } from '@noble/ciphers/utils.js';
 
-import { fromBase64Url, toBase64Url } from './base64url';
+import { fromBase64Url, toBase64Url } from '@/shared/lib/base64url';
 import type { Codec } from './codec';
 
 /** Session key: 32 random bytes, carried by the QR code only, never sent over the radio. */

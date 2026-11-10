@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { ReplayOutcome } from '@/core/events/outcome';
 import type { SideId } from '@/core/score/types';
-import { colors } from '@/ui/theme';
+import { colors } from '@/shared/ui/theme';
 
 import { BarButton } from './ReplayButtons';
 

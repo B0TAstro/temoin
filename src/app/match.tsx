@@ -1,15 +1,15 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
 
-import { randomBytes } from '@/adapters/random';
+import { randomBytes } from '@/shared/native/random';
 import { newSessionKey } from '@/core/protocol/joinLink';
 import { MatchScreen } from '@/features/match/MatchScreen';
 import { decodeForm } from '@/features/session/setup';
 import { useGuestSession } from '@/features/session/useGuestSession';
 import { useHostSession } from '@/features/session/useHostSession';
-import { Button } from '@/ui/Button';
-import { MessageScreen } from '@/ui/MessageScreen';
-import { useOrientation } from '@/ui/orientation';
+import { Button } from '@/shared/ui/Button';
+import { MessageScreen } from '@/shared/ui/MessageScreen';
+import { useOrientation } from '@/shared/ui/orientation';
 
 /** Host (created the session) or guest (scanned its QR code): same screen, same code. */
 export default function MatchRoute() {

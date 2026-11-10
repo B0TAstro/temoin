@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BleGuest } from '@/adapters/link/ble/BleGuest';
 import type { GuestTransport, LinkStatus } from '@/adapters/link/Transport';
 import { type LoggedEvent, type MatchEvent, replay } from '@/core/events/matchLog';
-import { randomBytes } from '@/adapters/random';
+import { randomBytes } from '@/shared/native/random';
 import { receiveEvent, receiveSnapshot } from '@/core/protocol/guestLog';
 import { decodeSessionKey } from '@/core/protocol/joinLink';
 import type { GuestMessage, HostMessage } from '@/core/protocol/messages';

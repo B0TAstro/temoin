@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { pointText, roleLabel, sideName } from '@/core/score/labels';
 import type { MatchState } from '@/core/score/types';
-import { colors } from '@/ui/theme';
+import { colors } from '@/shared/ui/theme';
 
 /** The match screen's score: readable from a distance, nothing else. */
 export function ScoreDisplay({ state }: { state: MatchState }) {

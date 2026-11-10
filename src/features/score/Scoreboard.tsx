@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { pointText, roleLabel, sideName } from '@/core/score/labels';
 import type { MatchState, Side } from '@/core/score/types';
-import { colors, radius } from '@/ui/theme';
+import { colors, radius } from '@/shared/ui/theme';
 
 function Row({ side, state }: { side: Side; state: MatchState }) {
   const serving = state.server === side.id;

@@ -4,8 +4,8 @@ import type { MatchEvent, MatchView } from '@/core/events/matchLog';
 import { sideName } from '@/core/score/labels';
 import type { SideId } from '@/core/score/types';
 import { PendingBanner } from '@/features/score/PendingBanner';
-import { Button } from '@/ui/Button';
-import { touch } from '@/ui/theme';
+import { Button } from '@/shared/ui/Button';
+import { touch } from '@/shared/ui/theme';
 
 export type MatchTab = 'score' | 'training';
 

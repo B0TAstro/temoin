@@ -3,12 +3,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video, { type VideoRef } from 'react-native-video';
 
-import { toUri } from '@/adapters/files';
+import { toUri } from '@/shared/native/files';
 import { stopBeforePeak } from '@/core/sound/soundPeaks';
 import type { Segment } from '@/core/clips/Segment';
 import { buildTimeline, locate } from '@/core/clips/timeline';
-import { colors, radius, touch } from '@/ui/theme';
-import { ZoomableView } from '@/ui/ZoomableView';
+import { colors, radius, touch } from '@/shared/ui/theme';
+import { ZoomableView } from '@/shared/ui/ZoomableView';
 
 import { PlaybackPanel } from './PlaybackPanel';
 import { useSoundPeaks } from './useSoundPeaks';

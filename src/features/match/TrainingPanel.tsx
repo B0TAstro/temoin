@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { MatchState } from '@/core/score/types';
 import type { ClipStats } from '@/features/recording/ClipRecorder';
 import { Scoreboard } from '@/features/score/Scoreboard';
-import { colors, radius } from '@/ui/theme';
+import { colors, radius } from '@/shared/ui/theme';
 
 /** The training tab: the full scoreboard and what the phone measures (fps, files, events). */
 export function TrainingPanel({

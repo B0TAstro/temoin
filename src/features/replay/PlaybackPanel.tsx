@@ -2,7 +2,7 @@ import { type ReactNode, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors } from '@/ui/theme';
+import { colors } from '@/shared/ui/theme';
 
 import { ControlButton } from './ReplayButtons';
 

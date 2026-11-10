@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { randomBytes } from '@/adapters/random';
+import { randomBytes } from '@/shared/native/random';
 import { newSessionId, newSessionKey } from '@/core/protocol/joinLink';
 import { DEFAULT_FORM, encodeForm, type SetupForm } from '@/features/session/setup';
-import { Button } from '@/ui/Button';
-import { colors, radius, touch } from '@/ui/theme';
+import { Button } from '@/shared/ui/Button';
+import { colors, radius, touch } from '@/shared/ui/theme';
 
 /** One screen, everything prefilled: the first point is filmed in under a minute. */
 export default function Create() {

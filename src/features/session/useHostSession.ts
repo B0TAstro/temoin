@@ -4,7 +4,7 @@ import { BleHost } from '@/adapters/link/ble/BleHost';
 import { LocalHost } from '@/adapters/link/LocalTransport';
 import type { HostTransport, LinkStatus } from '@/adapters/link/Transport';
 import { type LoggedEvent, type MatchEvent, replay } from '@/core/events/matchLog';
-import { randomBytes } from '@/adapters/random';
+import { randomBytes } from '@/shared/native/random';
 import { HostLog } from '@/core/protocol/hostLog';
 import { decodeSessionKey } from '@/core/protocol/joinLink';
 import type { GuestMessage, HostMessage } from '@/core/protocol/messages';

@@ -2,7 +2,7 @@ import { Directory, File } from 'expo-file-system';
 import { Platform } from 'react-native';
 import type { CameraVideoOutput, Recorder } from 'react-native-vision-camera';
 
-import { deleteFile, fileSize, toUri } from '@/adapters/files';
+import { deleteFile, fileSize, toUri } from '@/shared/native/files';
 import type { Segment } from '@/core/clips/Segment';
 
 /**

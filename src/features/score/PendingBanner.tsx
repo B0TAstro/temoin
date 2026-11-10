@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/ui/Button';
-import { colors, radius } from '@/ui/theme';
+import { Button } from '@/shared/ui/Button';
+import { colors, radius } from '@/shared/ui/theme';
 
 /** A proposed point, waiting for the other side to confirm it on the same screen. */
 export function PendingBanner({

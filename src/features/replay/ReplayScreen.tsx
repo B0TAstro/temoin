@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { Segment } from '@/core/clips/Segment';
 import type { ReplayOutcome } from '@/core/events/outcome';
-import { colors } from '@/ui/theme';
+import { colors } from '@/shared/ui/theme';
 
 import { ClipPlayer } from './ClipPlayer';
 import { OutcomeBar, type Side } from './OutcomeBar';

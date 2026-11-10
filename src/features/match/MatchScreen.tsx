@@ -19,9 +19,9 @@ import type { Session } from '@/features/session/Session';
 import { decodeForm, toSetup } from '@/features/session/setup';
 import { useVoice } from '@/features/voice/useVoice';
 import { heardLine } from '@/features/voice/voiceLabels';
-import { Button } from '@/ui/Button';
-import { MessageScreen } from '@/ui/MessageScreen';
-import { colors } from '@/ui/theme';
+import { Button } from '@/shared/ui/Button';
+import { MessageScreen } from '@/shared/ui/MessageScreen';
+import { colors } from '@/shared/ui/theme';
 
 import { MatchControls, type MatchTab } from './MatchControls';
 import { MatchSidebar } from './MatchSidebar';
