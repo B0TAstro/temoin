@@ -9,17 +9,16 @@ import { toUri } from '@/shared/native/files';
 import { colors, radius, touch } from '@/shared/ui/theme';
 import { ZoomableView } from '@/shared/ui/ZoomableView';
 
-import { PlaybackPanel } from './PlaybackPanel';
+import { PlaybackPanel } from './components/PlaybackPanel';
 
 const DEFAULT_RATE = 0.5;
-/** Where a point opens, in seconds before its end (the end is what players argue about). */
+/** Where a point opens, in seconds before its end (the end is what players argue about) */
 const START_BEFORE_END_SECONDS = 1;
-/** A jump to a sound peak lands this long before it, to see the ball come in frame by frame. */
+/** A jump to a sound peak lands this long before it */
 const PEAK_LEAD_SECONDS = 0.15;
 
 /**
- * Plays one point: one file almost always. When a point has several files they are stacked, all
- * loaded, and only the active one is visible, so switching files needs no reload.
+ * Plays one point: one file almost always. When a point has several files they are stacked, all loaded, and only the active one is visible, so switching files needs no reload
  */
 export function ClipPlayer({
   segments,
@@ -29,7 +28,6 @@ export function ClipPlayer({
   onClose,
 }: {
   segments: readonly Segment[];
-  /** Camera frame rate, used to step exactly one frame. */
   fps: number;
   header: ReactNode;
   footer: ReactNode;
@@ -57,7 +55,6 @@ export function ClipPlayer({
 
   const seekTo = (t: number) => {
     const target = locate(timeline, t, activeIndex);
-    // Zero tolerance: the player lands on the exact frame instead of the nearest keyframe.
     videoRefs.current[target.index]?.seek(target.localS, 0);
     setActiveIndex(target.index);
     setTime((timeline.segments[target.index]?.offsetS ?? 0) + target.localS);
@@ -70,7 +67,7 @@ export function ClipPlayer({
 
   const stepFrame = (direction: 1 | -1) => pauseAt(timeRef.current + direction / fps);
 
-  /** Pauses just before the next (or previous) loud sound: a hit, a bounce, or anything else. */
+  /** Pauses just before the next (or previous) loud sound: a hit, a bounce, or anything else */
   const jumpToPeak = (direction: 1 | -1) => {
     const target = stopBeforePeak(peaks, timeRef.current, direction, PEAK_LEAD_SECONDS);
     if (target !== undefined) pauseAt(target);
@@ -134,14 +131,14 @@ export function ClipPlayer({
               paused={!playing || index !== activeIndex}
               rate={rate}
               // Sound at normal speed only: stretched to slow motion it is no help. Played even with
-              // the phone on silent, which it usually is on court.
+              // the phone on silent, which it usually is on court
               muted={rate !== 1 || index !== activeIndex}
               ignoreSilentSwitch="ignore"
               repeat={false}
               progressUpdateInterval={33}
               onLoad={() => {
                 if (index !== initial.index) return;
-                // Already on the right frame: no seek, so no onSeek event to wait for.
+                // Already on the right frame: no seek, so no onSeek event to wait for
                 if (initial.localS < 1 / fps) onInitialSeekDone();
                 else videoRefs.current[index]?.seek(initial.localS, 0);
               }}

@@ -4,13 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/shared/ui/theme';
 
-import { ControlButton } from './ReplayButtons';
+import { ControlButton } from './ControlButton';
 
 export const RATES = [0.25, 0.5, 1] as const;
 
 /**
- * The right panel of the replay: time, the bar with the sound peaks, frame by frame, speed, and
- * the players' decision at the bottom (`footer`).
+ * The right panel of the replay: time, the bar with the sound peaks, frame by frame, speed, and the players' decision at the bottom
  */
 export function PlaybackPanel({
   timeS,
@@ -32,10 +31,8 @@ export function PlaybackPanel({
   playing: boolean;
   onTogglePlay: () => void;
   onStepFrame: (direction: 1 | -1) => void;
-  /** Sound peaks, in seconds on the point's timeline. */
   peaks: readonly number[];
   onJumpToPeak: (direction: 1 | -1) => void;
-  /** A tap on the bar: pauses there. */
   onSeek: (t: number) => void;
   footer: ReactNode;
 }) {

@@ -4,24 +4,20 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/shared/ui/theme';
 
 import { ClipPlayer } from './ClipPlayer';
-import { OutcomeBar, type Side } from './OutcomeBar';
-import { NavButton } from './ReplayButtons';
+import { NavButton } from './components/NavButton';
+import { OutcomeBar, type Side } from './components/OutcomeBar';
 import type { ReplayOutcome } from '../logic/outcome';
 import type { ReplayClip } from '../logic/toReplayClips';
 
 type Props = {
-  /** Oldest first: "◀" goes back in time. */
   clips: readonly ReplayClip[];
   initialIndex: number;
-  /** Camera frame rate, used to step exactly one frame. */
   fps: number;
   sides: readonly [Side, Side];
   onOutcome: (outcome: ReplayOutcome) => void;
-  /** Back to the score without changing anything. */
   onClose: () => void;
 };
 
-/** VAR: one point at a time, with "◀ / ▶" to move between the 3 points kept on the phone. */
 export function ReplayScreen({ clips, initialIndex, fps, sides, onOutcome, onClose }: Props) {
   const [index, setIndex] = useState(initialIndex);
   const clip = clips[index];

@@ -4,14 +4,13 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/shared/ui/theme';
 import type { SideId } from '@/sports/tennis';
 
-import { BarButton } from './ReplayButtons';
-import type { ReplayOutcome } from '../logic/outcome';
+import { BarButton } from './BarButton';
+import type { ReplayOutcome } from '../../logic/outcome';
 
 export type Side = { id: SideId; name: string };
 
 /**
- * The three outcomes, always visible. Choosing one asks the other side to confirm on the same
- * screen: the result only counts once both sides agree.
+ * The three outcomes, always visible. Choosing one asks the other side to confirm on the same screen: the result only counts once both sides agree
  */
 export function OutcomeBar({
   sides,

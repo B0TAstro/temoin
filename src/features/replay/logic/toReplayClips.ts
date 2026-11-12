@@ -1,18 +1,16 @@
 import type { ClipsForReplay, Segment } from '@/features/recording';
 
-/** One point of the replay. */
+/** One point of the replay */
 export type ReplayClip = {
   key: string;
-  /** E.g. "Set 1 · Jeu 4 · 30-15". */
   title: string;
-  /** E.g. "Dernier point", "Point en cours". */
   subtitle: string;
   segments: readonly Segment[];
 };
 
 export type ReplayClips = { clips: ReplayClip[]; initialIndex: number };
 
-/** VAR clips, oldest first: the kept points, then what was filmed of the point in progress. */
+/** VAR clips, oldest first: the kept points, then what was filmed of the point in progress */
 export function toReplayClips({ finished, current }: ClipsForReplay): ReplayClips {
   const clips: ReplayClip[] = [...finished].reverse().map((clip, i, all) => ({
     key: `clip-${clip.id}`,

@@ -5,12 +5,12 @@ import type { LoggedEvent, MatchView } from '@/features/session';
 
 import { type ReplayClips, toReplayClips } from './logic/toReplayClips';
 
-/** `forSeq`: the var-opened event these clips were frozen for. */
+/** `forSeq`: the var-opened event these clips were frozen for */
 type Frozen = ReplayClips & { forSeq: number };
 
 /**
  * VAR opens and closes on every phone at once, from the shared log; each one plays its own clips.
- * Null while the replay is closed, and while the clips are still being written.
+ * Null while the replay is closed, and while the clips are still being written
  */
 export function useVarReplay(
   view: MatchView,
