@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/shared/ui/theme';
 import { type MatchState, pointText, roleLabel, sideName } from '@/sports/tennis';
 
-/** The match screen's score: readable from a distance, nothing else. */
+/** The match screen's score: readable from a distance, nothing else */
 export function ScoreDisplay({ state }: { state: MatchState }) {
   const [a, b] = state.config.sides;
 
@@ -19,7 +19,6 @@ export function ScoreDisplay({ state }: { state: MatchState }) {
               {state.server === side.id && <View style={styles.ball} />}
               <Text style={styles.role}>{roleLabel(state, side.id)}</Text>
             </View>
-            {/* The landscape column is narrow on small phones: a two-digit score shrinks to fit. */}
             <Text style={styles.point} numberOfLines={1} adjustsFontSizeToFit>
               {pointText(state, side.id)}
             </Text>

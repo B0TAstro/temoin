@@ -7,8 +7,7 @@ import { readSoundLevels } from './native/readSoundLevels';
 
 /**
  * The sound peaks of the point on screen, on its replay timeline. Read when the replay opens, for
- * this point only: nothing runs while the match is being filmed. Empty until read, and for a
- * silent clip.
+ * this point only: nothing runs while the match is being filmed. Empty until read, and for a silent clip
  */
 export function useSoundPeaks(timeline: Timeline): number[] {
   const [peaks, setPeaks] = useState<{ for: Timeline; times: number[] }>();

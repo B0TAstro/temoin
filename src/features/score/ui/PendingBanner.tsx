@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/shared/ui/Button';
 import { colors, radius } from '@/shared/ui/theme';
 
-/** A proposed point, waiting for the other side to confirm it on the same screen. */
+/** A proposed point, waiting for the other side to confirm it on the same screen */
 export function PendingBanner({
   winnerName,
   onConfirm,
