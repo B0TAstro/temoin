@@ -4,17 +4,12 @@ import { useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  TARGET_FPS,
-  useAppActive,
-  useClipRecorder,
-  useClipsFromLog,
-  useMatchCamera,
-} from '@/features/recording';
+import { TARGET_FPS, useClipRecorder, useClipsFromLog, useMatchCamera } from '@/features/recording';
 import { outcomeEvents, ReplayScreen, useVarReplay } from '@/features/replay';
 import { ScoreDisplay } from '@/features/score';
 import { InviteOverlay, linkLabel, type MatchSession } from '@/features/session';
 import { heardLine, useVoice } from '@/features/voice';
+import { useAppActive } from '@/shared/native/useAppActive';
 import { Button } from '@/shared/ui/Button';
 import { MessageScreen } from '@/shared/ui/MessageScreen';
 import { colors } from '@/shared/ui/theme';
@@ -23,7 +18,6 @@ import { sideName, toMatchSetup } from '@/sports/tennis';
 import { DevStats } from './DevStats';
 import { MatchControls } from './MatchControls';
 import { MatchSidebar } from './MatchSidebar';
-
 
 export function MatchScreen({ session }: { session: MatchSession }) {
   const { view, dispatch, log } = session;
@@ -37,7 +31,7 @@ export function MatchScreen({ session }: { session: MatchSession }) {
   const [showQr, setShowQr] = useState(false);
   const [voiceOn, setVoiceOn] = useState(true);
 
-  // Recording pauses during the replay, to spare the phone (heat, battery)
+  // Recording pauses during the replay, to spare the phone (heat, battery), and in the background, where the OS stops the camera
   const matchOver = state.matchWonBy !== undefined;
   const cameraActive = !view.varOpen && appActive && !matchOver;
   const { stats, clips } = useClipRecorder(camera.videoOutput, camera.running && cameraActive);

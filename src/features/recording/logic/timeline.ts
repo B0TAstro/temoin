@@ -1,13 +1,13 @@
 import type { Segment } from './Segment';
 
-/** Files shorter than this (a cut right after a file started) are skipped. */
+/** Files shorter than this are skipped */
 const MIN_SEGMENT_SECONDS = 0.1;
-/** A longer hole between two files (pause, replay, app in background) is removed. */
+/** A longer hole between two files is removed */
 const MAX_GAP_SECONDS = 1;
 
 export type TimelineSegment = {
   path: string;
-  /** Position of the file's first frame on the replay timeline, in seconds. */
+  /** Position of the file's first frame on the replay timeline (seconds) */
   offsetS: number;
   durationS: number;
 };
@@ -18,9 +18,10 @@ export type Timeline = {
 };
 
 /**
- * Lays the files of a clip on a single timeline. Almost always one file per point; several only
- * when a proposed point was refused or the safety limit started a new file. Offsets come from the
- * JS start times, accurate to a few tens of ms: enough to switch from one file to the next.
+ * Lays the files of one point end to end, so the players see a single video with a single scrub bar.
+ *
+ * Several files after a pause (VAR, background), a refused proposal or the 5 min limit.
+ * Offsets come from the JS start times, accurate to a few tens of ms: enough to switch files
  */
 export function buildTimeline(all: readonly Segment[]): Timeline {
   const kept = all
@@ -47,8 +48,8 @@ export function buildTimeline(all: readonly Segment[]): Timeline {
 const contains = (s: TimelineSegment, t: number) => t >= s.offsetS && t <= s.offsetS + s.durationS;
 
 /**
- * Finds which file plays time `t` and where inside it. Keeps `preferIndex` when it covers `t`
- * (no needless switch while stepping frames), otherwise picks the newest file covering `t`.
+ * Finds which file plays time `t` and where inside it, for the scrub bar and frame stepping.
+ * Keeps `preferIndex` when it covers `t` (switching files flickers), else the newest one covering it
  */
 export function locate(
   timeline: Timeline,
@@ -71,7 +72,7 @@ export function locate(
     }
   }
   if (index === -1) {
-    // Hole between two files: jump to the next file's start.
+    // Hole between two files: jump to the next file's start
     index = segments.findIndex((s) => s.offsetS > clamped);
     if (index === -1) index = segments.length - 1;
   }

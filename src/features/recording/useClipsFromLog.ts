@@ -6,9 +6,8 @@ import { type MatchSetup, scoreLabel } from '@/sports/tennis';
 import type { ClipRecorder } from './ClipRecorder';
 
 /**
- * Every phone cuts its own file from the shared log, whoever pressed the button or heard the
- * call: a proposed or called point ends the clip, a rejected one gives it back to the point that
- * goes on. A guest joining late skips what happened before it arrived.
+ * Every phone cuts its own file from the shared log, whoever pressed the button or heard the call:
+ * a proposed or called point ends the clip, a rejected one gives it back to the point that goes on
  */
 export function useClipsFromLog(
   log: readonly LoggedEvent[],

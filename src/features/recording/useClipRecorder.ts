@@ -7,8 +7,8 @@ import { ClipRecorder } from './ClipRecorder';
 import { SegmentRecorder } from './native/SegmentRecorder';
 
 /**
- * Records one file per point while `recording` is true, on VisionCamera. The hook builds the
- * recorder with the phone's camera and files; the recorder does the work.
+ * Records one file per point while `recording` is true, on VisionCamera.
+ * The hook builds the recorder with the phone's camera and files
  */
 export function useClipRecorder(videoOutput: CameraVideoOutput, recording: boolean) {
   const clips = useMemo(
@@ -26,7 +26,7 @@ export function useClipRecorder(videoOutput: CameraVideoOutput, recording: boole
     else clips.stop();
   }, [clips, recording]);
 
-  // Nothing outlives the match: every clip is deleted (GDPR).
+  // Nothing outlives the match: every clip is deleted (GDPR)
   useEffect(() => () => clips.discard(), [clips]);
 
   return { stats, clips };

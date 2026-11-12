@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
-/** Whether the app is in the foreground: the OS stops the camera otherwise. */
+/** Whether the app is in the foreground (not in the background, not behind the control center) */
 export function useAppActive() {
   const [active, setActive] = useState(AppState.currentState === 'active');
   useEffect(() => {
