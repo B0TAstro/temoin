@@ -1,12 +1,12 @@
 import type { MatchEvent, MatchView } from '@/features/session';
 import type { SideId } from '@/sports/tennis';
 
-/** What the players decided, looking at the replay. The app never decides. */
+/** What the players decided, looking at the replay */
 export type ReplayOutcome = { kind: 'point'; winner: SideId } | { kind: 'replayed' };
 
 /**
- * The events that record the players' decision, then send every phone back to the score. A point
- * waiting for the other side is confirmed (for the winner they chose) or rejected; otherwise the
+ * The events that record the players' decision, then send every phone back to the score. 
+ * A point waiting for the other side is confirmed (for the winner they chose) or rejected; otherwise the
  * last counted point is kept, given to the other side, or removed.
  */
 export function outcomeEvents(view: MatchView, outcome: ReplayOutcome): MatchEvent[] {
