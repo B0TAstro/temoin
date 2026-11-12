@@ -21,7 +21,6 @@ const FINALIZE_TIMEOUT_MS = 5000;
 
 type ActiveSegment = {
   startedAt?: number;
-  nextStartedAt?: number;
   started: Promise<void>;
   finished: Promise<void>;
 };
@@ -45,18 +44,11 @@ function purgeStaleRecordings(currentPath: string) {
  */
 export class SegmentRecorder implements VideoRecorder {
   private active = new Map<Recorder, ActiveSegment>();
-  private last: ActiveSegment | undefined;
   private running = false;
   private errors = 0;
   private purged = false;
   private timer: ReturnType<typeof setTimeout> | undefined;
   private cutting: Promise<number> | undefined;
-  private lastEndedAt: number | undefined;
-  /**
-   * Overlap between the last two consecutive files, in ms (negative: a gap).
-   * Approximate: it uses the JS clock of the callbacks, not the timestamps of the frames
-   */
-  lastOverlapMs: number | undefined;
 
   constructor(
     private readonly videoOutput: CameraVideoOutput,
@@ -75,13 +67,11 @@ export class SegmentRecorder implements VideoRecorder {
   start() {
     if (this.running) return;
     this.setRunning(true);
-    this.last = undefined;
     this.startSegment();
   }
 
   async stop(): Promise<void> {
     this.setRunning(false);
-    this.last = undefined;
     clearTimeout(this.timer);
     await this.finish([...this.active.entries()]);
   }
@@ -106,7 +96,6 @@ export class SegmentRecorder implements VideoRecorder {
 
   cancel() {
     this.setRunning(false);
-    this.last = undefined;
     clearTimeout(this.timer);
     for (const recorder of this.active.keys()) recorder.cancelRecording().catch(() => {});
     this.active.clear();
@@ -181,8 +170,6 @@ export class SegmentRecorder implements VideoRecorder {
         deleteFile(path); // cancelled while finishing
       } else {
         const endedAt = Date.now();
-        this.lastEndedAt = endedAt;
-        if (segment.nextStartedAt != null) this.lastOverlapMs = endedAt - segment.nextStartedAt;
         this.events.onSegment({
           path,
           startedAt: segment.startedAt ?? endedAt,
@@ -203,11 +190,6 @@ export class SegmentRecorder implements VideoRecorder {
     try {
       await recorder.startRecording(onFinished, onError);
       segment.startedAt = Date.now();
-      if (this.last) this.last.nextStartedAt = segment.startedAt;
-      // Android: the previous file already finished, so the gap is known now
-      if (!CAN_OVERLAP && this.last && this.lastEndedAt != null)
-        this.lastOverlapMs = this.lastEndedAt - segment.startedAt;
-      this.last = segment;
       return segment.startedAt;
     } catch (e) {
       this.active.delete(recorder);

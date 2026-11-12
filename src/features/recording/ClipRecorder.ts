@@ -59,7 +59,7 @@ export class ClipRecorder {
     });
   }
 
-  /** Replay: the file in progress is written, the point goes on afterwards */
+  /** Replay, background: the file in progress is written, the point goes on afterwards */
   stop(): Promise<void> {
     return this.enqueue(async () => {
       clearInterval(this.trimTimer);
