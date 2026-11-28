@@ -10,7 +10,7 @@ export type Rate = (typeof RATES)[number];
 export const nextRate = (rate: Rate): Rate => RATES[(RATES.indexOf(rate) + 1) % RATES.length] ?? 1;
 const rateLabel = (rate: Rate) => `x${String(rate).replace('.', ',')}`;
 
-/** At the end of the seek bar: the ball tracking, the sound, the speed */
+/** At the end of the seek bar: the court lines (once calibrated), the ball tracking, the sound, the speed */
 export function PlayerTools({
   tracking,
   onTrack,
@@ -18,6 +18,8 @@ export function PlayerTools({
   onToggleMute,
   rate,
   onNextRate,
+  lines,
+  onToggleLines,
 }: {
   tracking: boolean;
   onTrack: () => void;
@@ -25,9 +27,20 @@ export function PlayerTools({
   onToggleMute: () => void;
   rate: Rate;
   onNextRate: () => void;
+  /** The court lines shown or not; undefined: no calibration, no button */
+  lines: boolean | undefined;
+  onToggleLines: () => void;
 }) {
   return (
     <View style={styles.row}>
+      {lines !== undefined && (
+        <Tool
+          icon="calibrate"
+          label={lines ? 'Masquer les lignes du court' : 'Afficher les lignes du court'}
+          active={lines}
+          onPress={onToggleLines}
+        />
+      )}
       <Tool
         icon="sparkle"
         label={tracking ? 'Arrêter le suivi de la balle' : 'Suivre la balle'}

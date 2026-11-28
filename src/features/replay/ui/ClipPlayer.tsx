@@ -5,6 +5,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Video, { type VideoRef } from 'react-native-video';
 
 import { BallHud, BallTrackOverlay, bounceMarks, useBallTrack } from '@/features/ball-tracking';
+import { courtArea, type CourtGeometry, CourtLinesOverlay } from '@/features/court';
 import { buildTimeline, locate, type Segment } from '@/features/recording';
 import { stopBeforePeak, useSoundPeaks } from '@/features/sound-peaks';
 import { toUri } from '@/shared/native/files';
@@ -32,6 +33,7 @@ export function ClipPlayer({
   segments,
   fps,
   court,
+  courtLines,
   assistedReading,
   replayStart,
   point,
@@ -43,6 +45,11 @@ export function ClipPlayer({
   fps: number;
   /** The court of the session: the ball tracking takes its settings from it */
   court: Court;
+  /**
+   * The court as this phone calibrated it, if it did: its lines over the video, and the area the
+   * ball is looked for in
+   */
+  courtLines: CourtGeometry | undefined;
   /** The setting: shows the assisted reading card once the point is tracked */
   assistedReading: boolean;
   /** From the settings: the start of the point, or its last second */
@@ -71,7 +78,9 @@ export function ClipPlayer({
   const insets = useSafeAreaInsets();
   const [timeS, setTimeS] = useState(initial.t);
   const peaks = useSoundPeaks(timeline);
-  const ball = useBallTrack(timeline, timeS, court);
+  const [inPlay] = useState(() => (courtLines ? courtArea(courtLines) : undefined));
+  const ball = useBallTrack(timeline, timeS, court, inPlay);
+  const [linesOn, setLinesOn] = useState(true);
   const bounces = useMemo(() => bounceMarks(ball.points, peaks), [ball.points, peaks]);
   const [readingOpen, setReadingOpen] = useState(true);
 
@@ -218,6 +227,7 @@ export function ClipPlayer({
               onEnd={() => onSegmentEnd(index)}
             />
           ))}
+          {courtLines && linesOn && <CourtLinesOverlay geometry={courtLines} mode="contain" />}
           {ball.on && ball.video && (
             <BallTrackOverlay
               points={ball.points}
@@ -297,6 +307,8 @@ export function ClipPlayer({
                 onToggleMute={tool(() => setMuted(!muted))}
                 rate={rate}
                 onNextRate={tool(() => setRate(nextRate(rate)))}
+                lines={courtLines ? linesOn : undefined}
+                onToggleLines={tool(() => setLinesOn(!linesOn))}
               />
             </View>
           </View>

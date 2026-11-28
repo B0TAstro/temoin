@@ -1,15 +1,8 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { router } from 'expo-router';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  Camera,
-  isScannedCode,
-  type ScannedObject,
-  type ScannedObjectType,
-  useCameraPermission,
-  useObjectOutput,
-} from 'react-native-vision-camera';
+import { Camera, useCameraPermission } from 'react-native-vision-camera';
 
 import { Button } from '@/shared/ui/Button';
 import { Icon } from '@/shared/ui/Icon';
@@ -19,57 +12,23 @@ import { TextField } from '@/shared/ui/TextField';
 import { colors, fonts, radiusCard, space, type } from '@/shared/ui/theme';
 
 import ScanCorner from '../../../../assets/images/scan-corner.svg';
-import { type Join, parseJoinLink, toJoin } from '../logic/joinLink';
+import { useGuestJoin } from '../useGuestJoin';
+import { usePhraseJoin } from '../usePhraseJoin';
+import { useQrJoin } from '../useQrJoin';
 
-const QR_TYPES: ScannedObjectType[] = ['qr'];
-
-function openMatch({ sessionId, key, wifi }: Join) {
-  // replace: the scanner unmounts and frees the camera for the match screen.
-  router.replace({
-    pathname: '/match',
-    params: { role: 'guest', s: sessionId, k: key, w: wifi.join(',') },
-  });
-}
-
-/** Scans the host's QR code (design.md §5.3). Also reached through the lineo://join link. */
+/**
+ * Joining a session (design.md §5.3): the host's QR code, or its phrase. Also reached through
+ * the lineo://join link
+ */
 export function JoinSessionScreen() {
-  const params = useLocalSearchParams<{ s?: string; k?: string; v?: string; w?: string }>();
-  const linked = toJoin(params);
+  const join = useGuestJoin();
+  const qr = useQrJoin(join);
+  const byPhrase = usePhraseJoin(join);
   const { hasPermission, canRequestPermission, requestPermission } = useCameraPermission();
-  const [invalid, setInvalid] = useState(false);
-  const [phrase, setPhrase] = useState('');
-  const done = useRef(false);
-
-  // Opened from the iPhone Camera app: the link already carries the session.
-  const linkedId = linked?.sessionId;
-  const linkedKey = linked?.key;
-  const linkedWifi = linked?.wifi.join(',');
-  useEffect(() => {
-    if (linkedId && linkedKey && !done.current) {
-      done.current = true;
-      openMatch({ sessionId: linkedId, key: linkedKey, wifi: linkedWifi?.split(',') ?? [] });
-    }
-  }, [linkedId, linkedKey, linkedWifi]);
 
   useEffect(() => {
     if (!hasPermission && canRequestPermission) requestPermission();
   }, [hasPermission, canRequestPermission, requestPermission]);
-
-  const objectOutput = useObjectOutput({
-    types: QR_TYPES,
-    onObjectsScanned: (objects: ScannedObject[]) => {
-      if (done.current) return;
-      for (const object of objects) {
-        const join = isScannedCode(object) && object.value ? parseJoinLink(object.value) : null;
-        if (join) {
-          done.current = true;
-          openMatch(join);
-          return;
-        }
-      }
-      setInvalid(true);
-    },
-  });
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -85,7 +44,7 @@ export function JoinSessionScreen() {
               style={StyleSheet.absoluteFill}
               device="back"
               isActive
-              outputs={[objectOutput]}
+              outputs={[qr.scanner]}
               resizeMode="cover"
             />
           ) : (
@@ -101,26 +60,31 @@ export function JoinSessionScreen() {
           ))}
         </View>
 
-        {invalid && <Text style={styles.invalid}>Ce n’est pas un code de session Lineo.</Text>}
+        {qr.invalid && <Text style={styles.invalid}>Ce n’est pas un code de session Lineo.</Text>}
 
-        {/* UI only: joining by phrase needs a way to share the session key without the QR code */}
         <View style={styles.field}>
           <Text style={styles.label}>Ou saisissez la phrase de session</Text>
           <TextField
-            value={phrase}
-            onChangeText={setPhrase}
-            placeholder="balle-filet-orange"
-            autoCapitalize="none"
+            value={byPhrase.phrase}
+            onChangeText={byPhrase.setPhrase}
+            placeholder="XE56-JFHF-K3QB"
+            autoCapitalize="characters"
             autoCorrect={false}
           />
           <Text style={styles.hint}>
-            La phrase s’affiche sous le QR code, sur le téléphone hôte.
+            {byPhrase.phrase.length > 0 && !byPhrase.complete
+              ? 'Phrase incomplète : 3 groupes de 4 caractères.'
+              : 'La phrase s’affiche sous le QR code, sur le téléphone hôte.'}
           </Text>
         </View>
       </View>
 
       <View style={styles.footer}>
-        <Button label="Rejoindre" disabled onPress={() => {}} />
+        <Button
+          label={byPhrase.joining ? '…' : 'Rejoindre'}
+          disabled={!byPhrase.complete || byPhrase.joining}
+          onPress={byPhrase.submit}
+        />
       </View>
     </SafeAreaView>
   );

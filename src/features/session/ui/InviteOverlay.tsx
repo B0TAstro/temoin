@@ -23,6 +23,7 @@ export function InviteOverlay({
   sessionId,
   sessionKey,
   wifi,
+  phrase,
   phones,
   link,
   onClose,
@@ -31,6 +32,8 @@ export function InviteOverlay({
   sessionKey: string;
   /** The host's Wi-Fi addresses (`ip:port`), empty with no Wi-Fi */
   wifi: string[];
+  /** The session phrase, typed on the guest instead of scanning */
+  phrase: string | undefined;
   /** Phones in the session, the host included */
   phones: number;
   link: LinkState;
@@ -48,13 +51,16 @@ export function InviteOverlay({
             Sur l’autre téléphone, ouvrez Lineo, touchez « Rejoindre une session » et scannez ce
             code.
           </Text>
-          {/* UI only: the session phrase does not exist yet (see JoinSessionScreen) */}
-          <View style={styles.phraseBlock}>
-            <Text style={styles.label}>Ou saisissez la phrase</Text>
-            <View style={styles.phrase}>
-              <Text style={styles.phraseSoon}>Bientôt disponible</Text>
+          {phrase !== undefined && (
+            <View style={styles.phraseBlock}>
+              <Text style={styles.label}>Ou saisissez la phrase</Text>
+              <View style={styles.phrase}>
+                <Text style={styles.phraseText} selectable>
+                  {phrase}
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
           <View style={styles.status}>
             <StatusDot state={link} size={8} />
             <Text style={styles.statusText}>
@@ -101,7 +107,13 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.12)',
     backgroundColor: colors.card,
   },
-  phraseSoon: { fontFamily: fonts.light, fontSize: 18, color: colors.textSoft },
+  phraseText: {
+    fontFamily: fonts.medium,
+    fontSize: 22,
+    letterSpacing: 2,
+    color: colors.text,
+    fontVariant: ['tabular-nums'],
+  },
   status: { flexDirection: 'row', alignItems: 'center', gap: space.s, marginTop: space.s },
   statusText: { fontFamily: fonts.light, fontSize: 13, color: colors.textDim },
   card: { backgroundColor: colors.text, borderRadius: 20, padding: CARD_PADDING },

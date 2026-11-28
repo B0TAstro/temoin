@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import type { CourtGeometry } from '@/features/court';
 import type { Court } from '@/sports/tennis';
 
 import { ClipPlayer } from './ClipPlayer';
@@ -17,6 +18,8 @@ type Props = {
   assistedReading: boolean;
   replayStart: 'start' | 'end';
   court: Court;
+  /** This phone's court calibration, if any: for the match's points, not the test videos */
+  courtLines: CourtGeometry | undefined;
   sides: readonly [Side, Side];
   onOutcome: (outcome: ReplayOutcome) => void;
   onClose: () => void;
@@ -37,6 +40,7 @@ export function ReplayScreen({
   assistedReading,
   replayStart,
   court,
+  courtLines,
   sides,
   onOutcome,
   onClose,
@@ -73,6 +77,7 @@ export function ReplayScreen({
       segments={clip.segments}
       fps={clip.fps ?? fps}
       court={court}
+      courtLines={devClips ? undefined : courtLines}
       assistedReading={assistedReading}
       replayStart={replayStart}
       point={point}

@@ -28,16 +28,20 @@ export function CreateSessionScreen() {
   const [doubles, setDoubles] = useState<DoublesDraft>(DEFAULT_DOUBLES);
   const update = (patch: Partial<SetupForm>) => setForm((previous) => ({ ...previous, ...patch }));
   const last = step === STEPS.length - 1;
+  // The key is worked out from the phrase: a fraction of a second, during which « Créer » waits
+  const [creating, setCreating] = useState(false);
 
   const back = () => (step > 0 ? setStep(step - 1) : router.back());
-  const create = () => {
-    const { sessionId, key } = newSession();
+  const create = async () => {
+    setCreating(true);
+    const { phrase, sessionId, key } = await newSession();
     router.replace({
       pathname: '/match',
       params: {
         role: 'host',
         s: sessionId,
         k: key,
+        p: phrase,
         form: encodeForm(toForm(form, format, doubles)),
       },
     });
@@ -175,8 +179,9 @@ export function CreateSessionScreen() {
             <Button label="Retour" variant="ghost" onPress={back} style={styles.backButton} />
           )}
           <Button
-            label={last ? 'Créer' : 'Suivant'}
-            onPress={last ? create : () => setStep(step + 1)}
+            label={last ? (creating ? '…' : 'Créer') : 'Suivant'}
+            disabled={creating}
+            onPress={last ? () => void create() : () => setStep(step + 1)}
             style={styles.nextButton}
           />
         </View>

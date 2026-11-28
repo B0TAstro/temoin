@@ -1,27 +1,17 @@
-import { fromBase64Url, toBase64Url } from '@/shared/lib/base64url';
+import { fromBase64Url } from '@/shared/lib/base64url';
 
 import { PROTOCOL_VERSION } from './messages';
 import { KEY_BYTES } from './SealedCodec';
 
-const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I or O: read aloud without confusion
+/** The session's code: 4 capitals, no I or O (read aloud without confusion), in the Bluetooth name */
+export const SESSION_ID_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+export const SESSION_ID_LENGTH = 4;
 
 /**
  * What a guest needs to join: the session to look for, the key to talk to it, and where the host
  * listens on the local Wi-Fi (`ip:port`, none when it has no Wi-Fi).
  */
 export type Join = { sessionId: string; key: string; wifi: string[] };
-
-/** A short code for the session: the host advertises it, the QR code carries it. */
-export function newSessionId(): string {
-  return Array.from(
-    { length: 4 },
-    () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)],
-  ).join('');
-}
-
-/** The session key, as text for the QR code and the route. */
-export const newSessionKey = (randomBytes: (count: number) => Uint8Array) =>
-  toBase64Url(randomBytes(KEY_BYTES));
 
 /** The key as bytes, or null if it is not a key. */
 export function decodeSessionKey(key: string): Uint8Array | null {

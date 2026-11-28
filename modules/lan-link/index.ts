@@ -20,8 +20,16 @@ declare class LanLinkModule extends NativeModule<LanLinkEvents> {
   stopListening(): void;
   /** This phone's private IPv4 addresses on Wi-Fi and hotspot interfaces (not cellular). */
   addresses(): string[];
+  /**
+   * mDNS: announces this phone's listener under a name (`_lineo._tcp`), from the next `listen`
+   * on, or the current one.
+   */
+  advertise(name: string): void;
+  stopAdvertising(): void;
   /** Resolves with the connection's id once it is up; rejects after a few seconds otherwise. */
   connect(host: string, port: number): Promise<string>;
+  /** Same, to the phone that advertises this mDNS name: no address needed. */
+  connectService(name: string): Promise<string>;
   /** Sends one line; the newline is added. */
   send(id: string, line: string): void;
   close(id: string): void;

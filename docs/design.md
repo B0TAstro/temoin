@@ -49,10 +49,10 @@ La roue en haut à droite ouvre les Paramètres. Le logo complet et « la ligne 
 Points d'étape au-dessus de **Suivant** / **Retour** / **Créer**. *UI only* : le double, les 5 sets (le score reste en simple, 2 sets gagnants ; en double, le match se joue entre les deux noms d'équipe).
 
 ### 5.3 Rejoindre
-La caméra dans une carte, avec les 4 coins citron du viseur. Le scan rejoint seul. *UI only* : la phrase de session (une phrase de 3 mots ne peut pas porter la clé de 32 octets du QR : à concevoir).
+La caméra dans une carte, avec les 4 coins citron du viseur. Le scan rejoint seul. Ou la phrase de session (`XE56-JFHF-K3QB`), tapée dans le champ : « Rejoindre » s'active dès qu'elle est complète.
 
 ### 5.4 Ajouter un téléphone (depuis le match, hôte seulement)
-Consigne, nombre de téléphones dans la session, et le QR code sur sa carte blanche. *UI only* : la phrase.
+Consigne, la phrase de session en grand, le nombre de téléphones dans la session, et le QR code sur sa carte blanche.
 
 ### 5.5 Score (pendant tout le match)
 Paysage, fond noir, le score en grand : rien d'autre ne doit attirer l'œil.
@@ -60,7 +60,7 @@ Paysage, fond noir, le score en grand : rien d'autre ne doit attirer l'œil.
 - En haut à droite : la pastille d'état (REC, icône du lien en usage, Bluetooth ou Wi-Fi, téléphones liés, état du lien), repliable.
 - Au centre : chaque camp avec **−** (retirer le dernier point, seulement le camp qui l'a gagné) et **+** (proposer le point), la pastille du serveur, les points en Outfit 200 ; entre les deux, les jeux de chaque set et « SET 3 » / « TIE-BREAK ». En double, les prénoms sous le nom d'équipe.
 - En bas : **Quitter**, **Pause** (enregistrement, voix et horloge arrêtés sur ce téléphone, « Reprendre »), **VAR** (citron). Un point proposé prend la place de Quitter et Pause : « Point pour Léa ? » avec Refuser / Valider.
-- **Infos** : le retour caméra, la liaison (Bluetooth, Wi-Fi, voix, chacun avec son état), REC avec les images par seconde mesurées, et la configuration (points en mémoire, taille d'un point, stockage, cadence). La caméra tourne en permanence, même panneau fermé. *UI only* : Calibrer (v0.7).
+- **Infos** : le retour caméra, la liaison (Bluetooth, Wi-Fi, voix, chacun avec son état), REC avec les images par seconde mesurées, et la configuration (points en mémoire, taille d'un point, stockage, cadence). La caméra tourne en permanence, même panneau fermé. **Calibrer** (citron, en haut à droite de l'image) : l'aperçu montre toute l'image, le joueur touche les 4 coins du court puis les glisse, choisit le rectangle (double, simple, carrés de service), Tourner, Recommencer, Annuler ou Valider. Ensuite, les lignes du court en citron sur l'aperçu, et « Recalibrer ».
 
 ### 5.6 Replay (litige sur une balle)
 S'ouvre **sur tous les téléphones de la session en même temps**, chacun avec sa propre caméra. Un vrai lecteur, dont les contrôles s'effacent après 3 s sans activité (un tap les rappelle) :

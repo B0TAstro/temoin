@@ -1,8 +1,14 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Camera, type CameraDevice, type CameraSessionConfig } from 'react-native-vision-camera';
 
+import {
+  type Calibration,
+  CalibrationLayer,
+  type CourtGeometry,
+  CourtLinesOverlay,
+} from '@/features/court';
 import type { ClipStats, MatchCamera } from '@/features/recording';
 import type { LinkSummary } from '@/features/session';
 import type { VoiceStatus } from '@/features/voice';
@@ -37,6 +43,7 @@ export function MatchInfo({
   stats,
   targetFps,
   savedPoints,
+  court,
   liveTracking,
   previewOverlay,
   dev,
@@ -55,6 +62,12 @@ export function MatchInfo({
   /** From the settings, read when the match started */
   targetFps: number;
   savedPoints: number;
+  /** This phone's court calibration: « Calibrer » places it on the camera image */
+  court: {
+    calibration: Calibration | undefined;
+    geometry: CourtGeometry | undefined;
+    onValidate: (calibration: Calibration) => void;
+  };
   /** Dev builds only: the replay's ball tracking, live on the camera image (off by default) */
   liveTracking?: { on: boolean; onToggle: () => void };
   /** Drawn over the camera image (dev: the live ball tracking) */
@@ -63,6 +76,8 @@ export function MatchInfo({
   dev?: ReactNode;
 }) {
   const insets = useSafeAreaInsets();
+  // Placing the court: the preview shows the whole picture (contain), as the recorded clip
+  const [calibrating, setCalibrating] = useState(false);
   const voice = VOICE[voiceStatus];
   const pointMB = stats.savedCount > 0 ? stats.totalMB / (stats.savedCount + 1) : undefined;
 
@@ -101,10 +116,20 @@ export function MatchInfo({
           onSessionConfigSelected={(config: CameraSessionConfig) =>
             camera.setSelectedFps(config.selectedFPS)
           }
-          resizeMode="cover"
+          resizeMode={calibrating ? 'contain' : 'cover'}
         />
-        {open ? (
+        {open && calibrating ? (
+          <CalibrationLayer
+            initial={court.calibration}
+            onCancel={() => setCalibrating(false)}
+            onValidate={(calibration) => {
+              court.onValidate(calibration);
+              setCalibrating(false);
+            }}
+          />
+        ) : open ? (
           <>
+            {court.geometry && <CourtLinesOverlay geometry={court.geometry} mode="cover" />}
             {previewOverlay}
             <View style={[styles.badge, styles.badgeRec]}>
               <View style={[styles.recDot, !recording && styles.recOff]} />
@@ -112,10 +137,15 @@ export function MatchInfo({
                 {recording ? 'REC' : 'PAUSE'} · {camera.fps.toFixed(0)} i/s
               </Text>
             </View>
-            {/* UI only: tapping the 4 corners of the court arrives with v0.7 */}
-            <Pressable disabled style={[styles.calibrate, styles.disabled]}>
+            <Pressable
+              onPress={() => setCalibrating(true)}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.calibrate, pressed && styles.pressed]}
+            >
               <Icon name="calibrate" color={colors.onAccent} />
-              <Text style={styles.calibrateText}>Calibrer</Text>
+              <Text style={styles.calibrateText}>
+                {court.calibration ? 'Recalibrer' : 'Calibrer'}
+              </Text>
             </Pressable>
             <View style={styles.imageTools}>
               {liveTracking && (
@@ -267,7 +297,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
   calibrateText: { fontFamily: fonts.medium, fontSize: 13, color: colors.onAccent },
-  disabled: { opacity: 0.5 },
   imageTools: {
     position: 'absolute',
     right: 16,

@@ -1,5 +1,5 @@
 import type { Codec } from '../../logic/codec';
-import type { LanLink } from '../lanLink';
+import { type LanLink, serviceName } from '../lanLink';
 import type { GuestTransport, LinkStatus } from '../Transport';
 
 const RETRY_MS = 2000;
@@ -7,8 +7,10 @@ const RETRY_MS = 2000;
 /**
  * A guest on the local Wi-Fi: connects to the first of the host's addresses that answers, and
  * tries them all again when the connection drops. The addresses come from the QR code, then from
- * the host's pings (a hotspot turned on during the match). On iOS the first connection waits for
- * the local network permission: it fails while the prompt is up, the next try gets through.
+ * the host's pings (a hotspot turned on during the match). With none of them (a guest that typed
+ * the phrase, out of Bluetooth range), it finds the host by its mDNS name. On iOS the first
+ * connection waits for the local network permission: it fails while the prompt is up, the next
+ * try gets through.
  */
 export class WifiGuest<In, Out> implements GuestTransport<Out> {
   private endpoints: string[] = [];
@@ -21,6 +23,7 @@ export class WifiGuest<In, Out> implements GuestTransport<Out> {
   private bound = false;
 
   constructor(
+    private readonly sessionId: string,
     private readonly lan: LanLink,
     private readonly codec: Codec<In, Out>,
     private readonly onMessage: (message: In) => void,
@@ -83,18 +86,25 @@ export class WifiGuest<In, Out> implements GuestTransport<Out> {
   private async tryEndpoints() {
     // Already connected: a second socket would replace the first and leave it open
     const busy = this.trying || this.connection !== undefined;
-    if (this.stopped || busy || this.endpoints.length === 0) return;
+    if (this.stopped || busy) return;
     this.trying = true;
     clearTimeout(this.retry);
     this.onStatus('connecting');
     // Android: a Wi-Fi with no internet would otherwise lose to mobile data. Android gives up the
     // request after a few seconds: asked again on every try until it holds
     if (!this.bound) this.bound = await this.lan.bindToWifi().catch(() => false);
-    for (const endpoint of this.endpoints) {
+    const attempts = [
+      ...this.endpoints.map((endpoint) => () => {
+        const [host, port] = endpoint.split(':');
+        return this.lan.connect(host ?? '', Number(port));
+      }),
+      // Last: the host's mDNS name, for a guest that knows no address
+      () => this.lan.connectService(serviceName(this.sessionId)),
+    ];
+    for (const attempt of attempts) {
       if (this.stopped) break;
-      const [host, port] = endpoint.split(':');
       try {
-        const id = await this.lan.connect(host ?? '', Number(port));
+        const id = await attempt();
         if (this.stopped) {
           this.lan.close(id);
           break;
@@ -105,7 +115,7 @@ export class WifiGuest<In, Out> implements GuestTransport<Out> {
         this.onConnected();
         return;
       } catch {
-        // next address
+        // next one
       }
     }
     this.trying = false;

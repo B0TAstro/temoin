@@ -43,8 +43,8 @@ Each version adds a building block without breaking the previous one. Each versi
 | **v0.3** · Voice | The app recognises the server's call, updates the score and cuts the clip, with no one touching the phone | The phone can disappear during the rally | Done |
 | **v0.4** · Sound | Sound recorded with the video, hits and bounces marked on the replay timeline | Sound helps read the replay | Done |
 | **v0.5** · Ball tracking | Ball followed in the replay, trajectory drawn | The ball can be tracked without a vision model | Done |
-| **v0.6** · Wi-Fi fallback | Automatic switch between Bluetooth and local Wi-Fi | No event is lost when Bluetooth drops | In progress |
-| **v0.7** · Calibrated court | Tap the 4 corners, court lines projected on the replay; join a session with a phrase | The geometry holds on a real court | Planned |
+| **v0.6** · Wi-Fi fallback | Automatic switch between Bluetooth and local Wi-Fi | No event is lost when Bluetooth drops | Done |
+| **v0.7** · Calibrated court | Tap the 4 corners, court lines projected on the replay; join a session with a phrase | The geometry holds on a real court | In progress |
 | **v0.8** · Detected court | Automatic court line and net detection | Manual calibration is no longer needed | Planned |
 | **v0.9** · Bounce and confidence | Bounce detected, in or out with a confidence score ("70% sure the ball was out"), never imposed | Detection actually helps read the picture and builds trust | Planned |
 | **v1.0** · Full match | One-hour field test, heat and battery under control; doubles scoring, best of 5 sets, terms and privacy policy | The app holds a real match | Planned |

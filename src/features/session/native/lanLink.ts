@@ -11,7 +11,10 @@ export interface LanLink {
   listen(port: number): Promise<number>;
   stopListening(): void;
   addresses(): string[];
+  advertise(name: string): void;
+  stopAdvertising(): void;
   connect(host: string, port: number): Promise<string>;
+  connectService(name: string): Promise<string>;
   send(id: string, line: string): void;
   close(id: string): void;
   bindToWifi(): Promise<boolean>;
@@ -21,11 +24,17 @@ export interface LanLink {
   onClose(listener: Listener<{ id: string }>): () => void;
 }
 
+/** The mDNS name a session's host announces itself under */
+export const serviceName = (sessionId: string) => `Lineo-${sessionId}`;
+
 export const nativeLanLink: LanLink = {
   listen: (port) => LanLinkModule.listen(port),
   stopListening: () => LanLinkModule.stopListening(),
   addresses: () => LanLinkModule.addresses(),
+  advertise: (name) => LanLinkModule.advertise(name),
+  stopAdvertising: () => LanLinkModule.stopAdvertising(),
   connect: (host, port) => LanLinkModule.connect(host, port),
+  connectService: (name) => LanLinkModule.connectService(name),
   send: (id, line) => LanLinkModule.send(id, line),
   close: (id) => LanLinkModule.close(id),
   bindToWifi: () => LanLinkModule.bindToWifi(),

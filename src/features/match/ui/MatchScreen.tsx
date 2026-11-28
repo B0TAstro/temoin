@@ -5,6 +5,7 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BallHud, BallTrackOverlay, useLiveBallTrack } from '@/features/ball-tracking';
+import { useCourtCalibration } from '@/features/court';
 import { useClipRecorder, useClipsFromLog, useMatchCamera } from '@/features/recording';
 import { outcomeEvents, ReplayScreen, useVarReplay, varSummary } from '@/features/replay';
 import { type PointControls, ScoreDisplay } from '@/features/score';
@@ -39,6 +40,10 @@ export function MatchScreen({ session }: { session: MatchSession }) {
   const [showHeard, setShowHeard] = useState(false);
   const liveBall = useLiveBallTrack(__DEV__ && liveBallOn, session.form.court);
   const camera = useMatchCamera(liveBall.onFrame);
+  // This phone's court, placed on its camera image: another camera films another picture
+  const court = useCourtCalibration();
+  const { clear: clearCourt } = court;
+  useEffect(() => clearCourt(), [camera.facing, clearCourt]);
   const appActive = useAppActive();
   const [showQr, setShowQr] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -214,6 +219,11 @@ export function MatchScreen({ session }: { session: MatchSession }) {
         stats={stats}
         targetFps={settings.fps}
         savedPoints={settings.savedPoints}
+        court={{
+          calibration: court.calibration,
+          geometry: court.geometry,
+          onValidate: court.set,
+        }}
         {...(__DEV__ && {
           liveTracking: { on: liveBallOn, onToggle: () => setLiveBallOn(!liveBallOn) },
         })}
@@ -247,6 +257,7 @@ export function MatchScreen({ session }: { session: MatchSession }) {
           sessionId={session.sessionId}
           sessionKey={session.key}
           wifi={session.role === 'host' ? session.wifi : []}
+          phrase={session.role === 'host' ? session.phrase : undefined}
           phones={session.role === 'host' ? session.guests + 1 : 1}
           link={link.state}
           onClose={() => setShowQr(false)}
@@ -261,6 +272,7 @@ export function MatchScreen({ session }: { session: MatchSession }) {
           assistedReading={settings.assistedReading}
           replayStart={settings.replayStart}
           court={session.form.court}
+          courtLines={court.geometry}
           sides={[
             { id: a.id, name: sideName(state, a.id), role: roleLabel(state, a.id) },
             { id: b.id, name: sideName(state, b.id), role: roleLabel(state, b.id) },

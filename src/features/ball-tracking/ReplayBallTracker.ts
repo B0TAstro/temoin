@@ -98,6 +98,11 @@ export class ReplayBallTracker {
     private readonly frames: ClipFrames,
     private readonly detector: BallDetector,
     private readonly config: BallConfig,
+    /**
+     * Where the ball can be, in fractions of the picture: the court and a margin around it, once
+     * the phone is calibrated. Blobs elsewhere (stands, spectators at the sides) are left out
+     */
+    private readonly inPlay: ((point: { x: number; y: number }) => boolean) | undefined,
   ) {}
 
   setOn(on: boolean) {
@@ -203,7 +208,15 @@ export class ReplayBallTracker {
     // carry their own time. A repeated frame (screen recordings) gets no answer.
     const judged = this.detector.detect({ pixels, width, height, format: 'rgb' }, reading.readS);
     this.store.set({ ms: performance.now() - start });
-    reading.frames.push(...judged);
+    const inPlay = this.inPlay;
+    reading.frames.push(
+      ...(inPlay
+        ? judged.map((frame) => ({
+            ...frame,
+            candidates: frame.candidates.filter((c) => inPlay({ x: c.x / width, y: c.y / height })),
+          }))
+        : judged),
+    );
     reading.untracked += judged.length;
 
     const oldest = reading.readS - KEEP_S;

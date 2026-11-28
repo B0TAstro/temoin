@@ -26,7 +26,7 @@ function guestLinks(sessionId: string, key: string): CreateGuestLinks {
     bluetooth: (codec, { onMessage, onStatus, onConnected }) =>
       new BleGuest(sessionId, codec, onMessage, onStatus, onConnected),
     wifi: (codec, { onMessage, onStatus, onConnected }) =>
-      new WifiGuest(nativeLanLink, codec, onMessage, onStatus, onConnected),
+      new WifiGuest(sessionId, nativeLanLink, codec, onMessage, onStatus, onConnected),
   };
 }
 

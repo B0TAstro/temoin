@@ -93,7 +93,8 @@ export class SessionGuest {
       console.warn('BLE guest', e);
       this.setStatus('bluetooth', 'lost');
     });
-    if (this.wifiHint.length > 0) this.openWifi(this.wifiHint);
+    // From the start, even with no address: the host may be found by its mDNS name
+    this.openWifi(this.wifiHint);
     this.timer = setInterval(() => this.judge(), JUDGE_EVERY_MS);
   }
 
@@ -128,8 +129,8 @@ export class SessionGuest {
       this.wifi = wifi;
       this.links.wifi = wifi;
       wifi.start().catch((e) => console.warn('Wi-Fi guest', e));
-      this.store.set({ wifiKnown: true });
     }
+    if (endpoints.length > 0) this.store.set({ wifiKnown: true });
     this.wifi.setEndpoints(endpoints);
   }
 

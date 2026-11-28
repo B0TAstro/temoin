@@ -19,6 +19,8 @@ export type HostSession = SessionBase & {
   role: 'host';
   form: SetupForm;
   view: MatchView;
+  /** The session phrase, for a guest to type instead of scanning the QR code. */
+  phrase: string | undefined;
   /** Bluetooth on (guests can join by it), or off: refused or unavailable. */
   link: 'connected' | 'off';
   /** Where guests reach this phone on the local Wi-Fi (`ip:port`); empty with no Wi-Fi. */

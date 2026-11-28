@@ -2,6 +2,7 @@ export type { GuestSession, HostSession, MatchSession, Session } from './Session
 export type { LinkSummary } from './linkStatus';
 export { linkStatus } from './linkStatus';
 export { toSession } from './logic/joinLink';
+export { readPhrase } from './logic/sessionPhrase';
 export type { LoggedEvent, MatchEvent, MatchView } from './logic/matchLog';
 export { replayLog } from './logic/matchLog';
 export { newSession } from './newSession';

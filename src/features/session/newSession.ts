@@ -1,9 +1,12 @@
 import { randomBytes } from '@/shared/native/random';
 
-import { type Join, newSessionId, newSessionKey } from './logic/joinLink';
+import { newPhrase, sessionOfPhrase } from './logic/sessionPhrase';
 
-/** A new session: the code the host advertises, and the key its QR code carries. */
-export const newSession = (): Omit<Join, 'wifi'> => ({
-  sessionId: newSessionId(),
-  key: newSessionKey(randomBytes),
-});
+/**
+ * A new session: its phrase (the host shows it), and the code and key worked out from it (the
+ * code is advertised, the QR code carries both).
+ */
+export async function newSession(): Promise<{ phrase: string; sessionId: string; key: string }> {
+  const phrase = newPhrase(randomBytes);
+  return { phrase, ...(await sessionOfPhrase(phrase)) };
+}

@@ -1,17 +1,18 @@
 import { useLocalSearchParams } from 'expo-router';
 
 import { GuestMatch, HostMatch, InvalidLink } from '@/features/match';
-import { toSession } from '@/features/session';
+import { readPhrase, toSession } from '@/features/session';
 import { useOrientation } from '@/shared/ui/orientation';
 
 export default function MatchRoute() {
   useOrientation('landscape');
-  // role 'host' | 'guest', s session code, k session key, w the host's Wi-Fi addresses, form match settings
+  // role 'host' | 'guest', s session code, k session key, w the host's Wi-Fi addresses, p the host's session phrase, form match settings
   const params = useLocalSearchParams<{
     role?: string;
     s?: string;
     k?: string;
     w?: string;
+    p?: string;
     form?: string;
   }>();
 
@@ -36,6 +37,7 @@ export default function MatchRoute() {
         key={`${identity}:${params.form ?? ''}`}
         sessionId={session.sessionId}
         sessionKey={session.key}
+        phrase={readPhrase(params.p ?? '') ?? undefined}
         rawForm={params.form}
       />
     );

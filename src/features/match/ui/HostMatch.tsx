@@ -8,13 +8,16 @@ import { MatchScreen } from './MatchScreen';
 export function HostMatch({
   sessionId,
   sessionKey,
+  phrase,
   rawForm,
 }: {
   sessionId: string;
   sessionKey: string;
+  /** The session phrase, shown under the QR code for a guest to type */
+  phrase: string | undefined;
   rawForm: string | undefined;
 }) {
   // Same object while the text is the same, a new one would restart the session
   const form = useMemo(() => decodeForm(rawForm), [rawForm]);
-  return <MatchScreen session={useHostSession(sessionId, sessionKey, form)} />;
+  return <MatchScreen session={useHostSession(sessionId, sessionKey, form, phrase)} />;
 }

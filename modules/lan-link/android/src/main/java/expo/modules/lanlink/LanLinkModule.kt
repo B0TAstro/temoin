@@ -5,6 +5,8 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdServiceInfo
 import android.os.Build
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
@@ -27,6 +29,10 @@ private const val CONNECT_TIMEOUT_MS = 5_000
 /** A line longer than this is not one of ours: the connection is closed (as on iOS). */
 private const val MAX_LINE_BYTES = 1_000_000
 private const val NEWLINE = '\n'.code.toByte()
+/** The mDNS (DNS-SD) service type the host advertises its session under (same as iOS). */
+private const val SERVICE_TYPE = "_lineo._tcp"
+/** How long a guest looks for the host's mDNS name before giving up (it tries again later). */
+private const val DISCOVERY_TIMEOUT_MS = 5_000L
 /** How long Android may take to hand over the Wi-Fi network. */
 private const val WIFI_REQUEST_MS = 3_000
 /** Wi-Fi and hotspot interfaces: not cellular (rmnet, ccmni), not VPN (tun). */
@@ -38,6 +44,14 @@ class LanLinkModule : Module() {
   private val peers = ConcurrentHashMap<String, Peer>()
   @Volatile private var server: ServerSocket? = null
   private var wifiCallback: ConnectivityManager.NetworkCallback? = null
+
+  @Volatile private var port = 0
+  /** The mDNS name to announce once listening (set by advertise). */
+  private var advertisedName: String? = null
+  private var registration: NsdManager.RegistrationListener? = null
+
+  private val nsd: NsdManager?
+    get() = appContext.reactContext?.getSystemService(Context.NSD_SERVICE) as? NsdManager
 
   private val connectivity: ConnectivityManager?
     get() =
@@ -54,6 +68,8 @@ class LanLinkModule : Module() {
           server?.close()
           val listening = ServerSocket(port)
           server = listening
+          this@LanLinkModule.port = listening.localPort
+          advertisedName?.let { register(it) }
           threads.execute { accept(listening) }
           promise.resolve(listening.localPort)
         } catch (e: Exception) {
@@ -68,6 +84,19 @@ class LanLinkModule : Module() {
     }
 
     Function("addresses") { localAddresses() }
+
+    // mDNS: the host announces the session by name, a guest with no address finds it
+    Function("advertise") { name: String ->
+      advertisedName = name
+      if (port != 0) register(name)
+    }
+
+    Function("stopAdvertising") {
+      advertisedName = null
+      unregister()
+    }
+
+    AsyncFunction("connectService") { name: String, promise: Promise -> discover(name, promise) }
 
     AsyncFunction("connect") { host: String, port: Int, promise: Promise ->
       threads.execute {
@@ -114,11 +143,101 @@ class LanLinkModule : Module() {
     Function("unbindWifi") { unbindWifi() }
 
     OnDestroy {
+      unregister()
       server?.close()
       server = null
       peers.values.forEach { it.close() }
       unbindWifi()
       threads.shutdownNow()
+    }
+  }
+
+  private fun register(name: String) {
+    val manager = nsd ?: return
+    unregister()
+    val info =
+      NsdServiceInfo().apply {
+        serviceName = name
+        serviceType = SERVICE_TYPE
+        port = this@LanLinkModule.port
+      }
+    val listener =
+      object : NsdManager.RegistrationListener {
+        override fun onServiceRegistered(info: NsdServiceInfo) {}
+        override fun onRegistrationFailed(info: NsdServiceInfo, error: Int) {}
+        override fun onServiceUnregistered(info: NsdServiceInfo) {}
+        override fun onUnregistrationFailed(info: NsdServiceInfo, error: Int) {}
+      }
+    registration = listener
+    manager.registerService(info, NsdManager.PROTOCOL_DNS_SD, listener)
+  }
+
+  private fun unregister() {
+    val listener = registration ?: return
+    registration = null
+    try {
+      nsd?.unregisterService(listener)
+    } catch (e: Exception) {}
+  }
+
+  /** Finds the host's mDNS name, resolves its address, and connects to it. */
+  @Suppress("DEPRECATION") // resolveService: its replacement needs API 34
+  private fun discover(name: String, promise: Promise) {
+    val manager = nsd
+    if (manager == null) {
+      promise.reject("ERR_CONNECT", "No network service discovery", null)
+      return
+    }
+    val settled = AtomicBoolean(false)
+    lateinit var discovery: NsdManager.DiscoveryListener
+    val fail = { message: String ->
+      if (settled.compareAndSet(false, true)) {
+        try {
+          manager.stopServiceDiscovery(discovery)
+        } catch (e: Exception) {}
+        promise.reject("ERR_CONNECT", message, null)
+      }
+    }
+    discovery =
+      object : NsdManager.DiscoveryListener {
+        override fun onServiceFound(info: NsdServiceInfo) {
+          if (info.serviceName != name || settled.get()) return
+          manager.resolveService(
+            info,
+            object : NsdManager.ResolveListener {
+              override fun onServiceResolved(resolved: NsdServiceInfo) {
+                val host = resolved.host?.hostAddress ?: return fail("No address for $name")
+                if (!settled.compareAndSet(false, true)) return
+                try {
+                  manager.stopServiceDiscovery(discovery)
+                } catch (e: Exception) {}
+                threads.execute {
+                  try {
+                    val socket = Socket()
+                    socket.connect(InetSocketAddress(host, resolved.port), CONNECT_TIMEOUT_MS)
+                    promise.resolve(adopt(socket, inbound = false))
+                  } catch (e: Exception) {
+                    promise.reject("ERR_CONNECT", "Cannot reach $name", e)
+                  }
+                }
+              }
+
+              override fun onResolveFailed(info: NsdServiceInfo, error: Int) =
+                fail("Cannot resolve $name")
+            },
+          )
+        }
+
+        override fun onServiceLost(info: NsdServiceInfo) {}
+        override fun onDiscoveryStarted(type: String) {}
+        override fun onDiscoveryStopped(type: String) {}
+        override fun onStartDiscoveryFailed(type: String, error: Int) = fail("Discovery failed")
+        override fun onStopDiscoveryFailed(type: String, error: Int) {}
+      }
+    manager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discovery)
+    threads.execute {
+      Thread.sleep(DISCOVERY_TIMEOUT_MS)
+      fail("$name not found")
     }
   }
 
